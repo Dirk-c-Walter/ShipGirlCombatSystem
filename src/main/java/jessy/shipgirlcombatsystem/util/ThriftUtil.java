@@ -22,7 +22,7 @@ import jessy.shipgirlcombatsystem.thrift.ThriftShip;
  */
 public class ThriftUtil {
     public static Color convertThrift(ThriftColor col) {
-        return new Color(col.red, col.green, col.green);
+        return new Color(col.red, col.green, col.blue);
     }
     
     public static ThriftColor makeThrift(Color col) {
@@ -32,9 +32,15 @@ public class ThriftUtil {
     public static List<ThriftShip> makeThrift(HexMap gameState) {
         List<ThriftShip> list = new LinkedList<>();
         for(BoardItem item : gameState.getAllItems()) {
-            ThriftShip thrift = item.thrift();
-            if(thrift != null) {
-                list.add(thrift);
+            try {
+                if(item != null) {
+                    ThriftShip thrift = item.thrift();
+                    if(thrift != null) {
+                        list.add(thrift);
+                    }
+                }
+            } catch (Exception ex) {
+                
             }
         }
         return list;

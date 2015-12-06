@@ -30,6 +30,7 @@ import jessy.shipgirlcombatsystem.commands.ShipCommands;
 import jessy.shipgirlcombatsystem.map.Hex;
 import jessy.shipgirlcombatsystem.map.HexMap;
 import jessy.shipgirlcombatsystem.map.Player;
+import jessy.shipgirlcombatsystem.screens.MapPanel;
 import jessy.shipgirlcombatsystem.ship.Ship;
 import jessy.shipgirlcombatsystem.thrift.ShipGirlCombatSystemServer;
 import jessy.shipgirlcombatsystem.thrift.ShipGirlServiceError;
@@ -62,6 +63,7 @@ public class Server {
     private final GameProcessor processor = new GameProcessor();
     private int turn = 0;
     private List<ThriftCommand> turnActions = Collections.synchronizedList(new LinkedList<ThriftCommand>());
+    private final MapPanel panel;
     
     public static void main(String[] args) throws IOException, TTransportException {
         Server server1 = new Server(3333);
@@ -69,11 +71,14 @@ public class Server {
     
     public Server(int port) throws IOException, TTransportException {
         this.socket = new ServerSocket(port);
+        panel = new MapPanel();
         
         gameState.add(new Ship(gameState.getNewUniqueID(), new Player("A", Color.pink)), new Hex(2,2));
         gameState.add(new Ship(gameState.getNewUniqueID(), new Player("B", new Color(50,255,50))), new Hex(2,-2));
         gameState.add(new Ship(gameState.getNewUniqueID(), new Player("C", Color.YELLOW)), new Hex(-2,2));
         gameState.add(new Ship(gameState.getNewUniqueID(), new Player("D",  new Color(50,50,255))), new Hex(-2,-2));
+        
+        panel.applyNewTurn(gameState, currentPhase);
         
         TServerSocket tsock = new TServerSocket(socket);
         TThreadPoolServer.Args args = new TThreadPoolServer.Args(tsock);
@@ -111,6 +116,7 @@ public class Server {
             }
         }
         gameState.advancePhase();
+        panel.applyNewTurn(gameState, currentPhase);
         processor.waiter = new WaitObject(processor.playerList);
         turnActions = Collections.synchronizedList(new LinkedList<ThriftCommand>());
     }

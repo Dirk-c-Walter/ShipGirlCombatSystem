@@ -57,6 +57,7 @@ public class Client {
             case INIT_PHASE: packet.setType(ThriftPacketType.DoneLobby); break;
             case MOVEMENT_PHASE: packet.setType(ThriftPacketType.DoneMove); break;
             case ACTION_PHASE: packet.setType(ThriftPacketType.DoneFire); break;
+            default: packet.setType(ThriftPacketType.DoneLobby);
         }
         for(Command cmd: cmds) { 
             packet.addToCommands(cmd.thrift());
