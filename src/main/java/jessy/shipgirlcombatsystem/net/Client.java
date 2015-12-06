@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
@@ -24,8 +25,8 @@ import jessy.shipgirlcombatsystem.thrift.ThriftPacketType;
 import jessy.shipgirlcombatsystem.util.Phase;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TSocket;
-import org.apache.thrift.protocol.TBinaryProtocol;
-import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.protocol.*;
+import org.apache.thrift.transport.TFramedTransport;
 import org.apache.thrift.transport.TTransportException;
 
 /**
@@ -39,11 +40,12 @@ public class Client {
     
     public Client(String hostname) throws IOException, TTransportException {
         this.socket = new Socket(hostname, 3333);
-        TProtocol tprot = new TBinaryProtocol(new TSocket(socket));
+        TProtocol tprot = new TBinaryProtocol(new TSocket(socket), false, true);// new TCompactProtocol(new TSocket(socket));//
         client = new ShipGirlCombatSystemServer.Client(tprot);
     }
     
     public String join(Player newPlayer) throws TException {
+
         me = newPlayer;
         return client.joinPlayer(newPlayer.thrift()).getMotd();
     }
@@ -59,6 +61,10 @@ public class Client {
         for(Command cmd: cmds) { 
             packet.addToCommands(cmd.thrift());
         }
+        if(!packet.isSetCommands()) {
+            packet.setCommands(Collections.EMPTY_LIST);
+        }
+
         ThriftGameState newState = client.donePhase(packet);
         return new HexMap(newState);
     }

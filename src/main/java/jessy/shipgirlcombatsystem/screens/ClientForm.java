@@ -6,6 +6,10 @@
 package jessy.shipgirlcombatsystem.screens;
 
 import java.awt.Color;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import jessy.shipgirlcombatsystem.map.Player;
 
 /**
@@ -118,7 +122,15 @@ public class ClientForm extends javax.swing.JFrame {
         player.setPlayerColor(color);
         player.setName(playerName);
         
-        MapPanel.getInstance().setPlayer(player);
+        final MapPanel map = MapPanel.getInstance();
+        map.setPlayer(player);
+        try {
+            String msg =map.connectTo(hostname);
+            JOptionPane.showConfirmDialog(rootPane, msg);
+            setVisible(false);
+        } catch (IOException ex) {
+            Logger.getLogger(ClientForm.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
