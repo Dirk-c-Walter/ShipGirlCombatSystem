@@ -9,70 +9,57 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jessy.shipgirlcombatsystem.commands.Command;
 import jessy.shipgirlcombatsystem.map.HexMap;
+import jessy.shipgirlcombatsystem.map.Player;
 import jessy.shipgirlcombatsystem.screens.MapPanel;
+import jessy.shipgirlcombatsystem.thrift.ShipGirlCombatSystemServer;
+import jessy.shipgirlcombatsystem.thrift.ThriftCommandList;
+import jessy.shipgirlcombatsystem.thrift.ThriftGameState;
+import jessy.shipgirlcombatsystem.thrift.ThriftPacketType;
 import jessy.shipgirlcombatsystem.util.Phase;
+import org.apache.thrift.TException;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TTransportException;
 
 /**
  *
  * @author dirk
  */
-public class Client implements Runnable {
-    final Socket socket;
-    private final ObjectOutputStream oos;
-    private final ObjectInputStream ois;
-    private final AtomicBoolean running = new AtomicBoolean(true);
-
-    public Client(String hostname) throws IOException {
+public class Client {
+    private final Socket socket;
+    private final ShipGirlCombatSystemServer.Client client;
+    private Player me;
+    
+    public Client(String hostname) throws IOException, TTransportException {
         this.socket = new Socket(hostname, 3333);
-        oos = new ObjectOutputStream(socket.getOutputStream());
-        ois = new ObjectInputStream(socket.getInputStream());
+        TProtocol tprot = new TBinaryProtocol(new TSocket(socket));
+        client = new ShipGirlCombatSystemServer.Client(tprot);
     }
-
-    private void close() throws IOException {
-        running.set(false);
-        ois.close();
-        oos.close();
-        socket.close();
+    
+    public String join(Player newPlayer) throws TException {
+        me = newPlayer;
+        return client.joinPlayer(newPlayer.thrift()).getMotd();
     }
-
-    @Override
-    public void run() {
-        sendData(new GenericPacket(PacketType.PLAYER_JOIN, MapPanel.getInstance().getPlayerData()));
-        while(running.get()) {
-            try {
-                Object readObject = ois.readObject();
-                if(readObject instanceof Packet) {
-                    final Packet p = (Packet) readObject;
-                    final HexMap mapUpdate;
-                    switch(p.type) {
-                        case GAME_INIT:
-                        case GAME_UPDATE_FIRE:
-                            mapUpdate = (HexMap) p.getData();
-                            MapPanel.getInstance().applyNewTurn(mapUpdate, Phase.MOVEMENT_PHASE);
-                            break;
-                        case GAME_UPDATE_MOVE:
-                            mapUpdate = (HexMap) p.getData();
-                            MapPanel.getInstance().applyNewTurn(mapUpdate, Phase.ACTION_PHASE);
-                            break;
-                    }
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (ClassNotFoundException ex) {
-                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            }
+    
+    public HexMap doneTurn(List<Command> cmds, HexMap current, Phase phase) throws TException {
+        ThriftCommandList packet = new ThriftCommandList();
+        packet.setPlayer(me.thrift());
+        switch(phase) {
+            case INIT_PHASE: packet.setType(ThriftPacketType.DoneLobby); break;
+            case MOVEMENT_PHASE: packet.setType(ThriftPacketType.DoneMove); break;
+            case ACTION_PHASE: packet.setType(ThriftPacketType.DoneFire); break;
         }
-    }
-
-    public void sendData(Packet p) {
-        try {
-            oos.writeUnshared(p);
-        } catch (IOException ex) {
-            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        for(Command cmd: cmds) { 
+            packet.addToCommands(cmd.thrift());
         }
+        ThriftGameState newState = client.donePhase(packet);
+        return new HexMap(newState);
     }
 }

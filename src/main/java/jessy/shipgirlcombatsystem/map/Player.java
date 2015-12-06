@@ -7,6 +7,8 @@ package jessy.shipgirlcombatsystem.map;
 
 import java.awt.Color;
 import java.util.Objects;
+import jessy.shipgirlcombatsystem.thrift.ThriftPlayer;
+import jessy.shipgirlcombatsystem.util.ThriftUtil;
 
 
 /**
@@ -24,6 +26,11 @@ public class Player {
     public Player(String name, Color col) {
         this.name = name;
         playerColor = col;
+    }
+
+    public Player(ThriftPlayer player) {
+        name = player.name;
+        playerColor = ThriftUtil.convertThrift(player.color);
     }
 
     public Color getPlayerColor() {
@@ -59,10 +66,12 @@ public class Player {
             return false;
         }
         final Player other = (Player) obj;
-        if (!Objects.equals(this.name, other.name)) {
-            return false;
-        }
-        return true;
+        
+        return Objects.equals(this.name, other.name);
+    }
+
+    public ThriftPlayer thrift() {
+        return new ThriftPlayer(name, ThriftUtil.makeThrift(playerColor));
     }
     
     

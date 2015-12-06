@@ -4,7 +4,9 @@
  */
 package jessy.shipgirlcombatsystem.map;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
+import jessy.shipgirlcombatsystem.thrift.ThriftShip;
 
 /**
  *
@@ -34,4 +36,9 @@ public interface BoardItem extends Cloneable {
     public void doNewtonian();
     
     public BoardItem clone();
+
+    public ThriftShip thrift();
+
+    public Player getOwner();
+
 }

@@ -22,6 +22,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
@@ -31,12 +33,12 @@ import jessy.shipgirlcombatsystem.map.Hex;
 import jessy.shipgirlcombatsystem.map.HexMap;
 import jessy.shipgirlcombatsystem.map.Player;
 import jessy.shipgirlcombatsystem.net.Client;
-import jessy.shipgirlcombatsystem.net.GenericPacket;
-import jessy.shipgirlcombatsystem.net.Packet;
-import jessy.shipgirlcombatsystem.net.PacketType;
 import jessy.shipgirlcombatsystem.ship.Ship;
 import jessy.shipgirlcombatsystem.util.MathUtil;
 import jessy.shipgirlcombatsystem.util.Phase;
+import jessy.shipgirlcombatsystem.util.ThriftUtil;
+import org.apache.thrift.TException;
+import org.apache.thrift.transport.TTransportException;
 
 /**
  *
@@ -73,14 +75,24 @@ public class MapPanel extends javax.swing.JPanel {
         instance = this;
     }
     
+    public HexMap getBoard() {
+        return current;
+    }
+    
     public static MapPanel getInstance() {
         return instance;
     }
     
-    public void applyNewTurn(HexMap newTurn, Phase phase) {
-        startOfTurn = newTurn;
-        current = new HexMap(startOfTurn);
-        commands = new LinkedList<>();
+    public void applyNewTurn(final HexMap newTurn, Phase phase) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                startOfTurn = newTurn;
+                current = new HexMap(startOfTurn);
+                commands = new LinkedList<>();
+                repaint();
+            } 
+        });
     }
     
     private void setSize(int size) {
@@ -161,7 +173,20 @@ public class MapPanel extends javax.swing.JPanel {
     
     public void sendCommands() {
         assert(client != null);
-        client.sendData(new GenericPacket(PacketType.END_MOVE, commands));
+        final LinkedList<Command> cmd = commands;
+        final HexMap cur = current;
+        ThriftUtil.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    HexMap newTurn = client.doneTurn(cmd, cur,cur.getPhase());
+                    applyNewTurn(newTurn, newTurn.getPhase());
+                } catch (TException ex) {
+                    Logger.getLogger(MapPanel.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            
+        });
         current.setPhase(Phase.WAIT_PHASE);
         commands = new LinkedList<>();
     }
@@ -206,10 +231,18 @@ public class MapPanel extends javax.swing.JPanel {
         player = p;
     }
     
-    public void connectTo(String hostname) throws IOException {
+    public String connectTo(String hostname) throws IOException {
         assert(player != null && client == null);
-        client = new Client(hostname);
-        (new Thread(client)).start();
+        try {
+            client = new Client(hostname);
+            return client.join(player);
+        } catch (TTransportException ex) {
+            Logger.getLogger(MapPanel.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (TException ex) {
+            Logger.getLogger(MapPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return "Failure";
     }
     
     public Client getClient() {

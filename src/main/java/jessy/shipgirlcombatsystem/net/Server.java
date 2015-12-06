@@ -5,6 +5,7 @@
  */
 package jessy.shipgirlcombatsystem.net;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -13,149 +14,165 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jessy.shipgirlcombatsystem.commands.Command;
+import jessy.shipgirlcombatsystem.commands.ShipCommands;
+import jessy.shipgirlcombatsystem.map.Hex;
 import jessy.shipgirlcombatsystem.map.HexMap;
+import jessy.shipgirlcombatsystem.map.Player;
+import jessy.shipgirlcombatsystem.ship.Ship;
+import jessy.shipgirlcombatsystem.thrift.ShipGirlCombatSystemServer;
+import jessy.shipgirlcombatsystem.thrift.ShipGirlServiceError;
+import jessy.shipgirlcombatsystem.thrift.ThriftCommand;
+import jessy.shipgirlcombatsystem.thrift.ThriftCommandList;
+import jessy.shipgirlcombatsystem.thrift.ThriftGameState;
+import static jessy.shipgirlcombatsystem.thrift.ThriftPacketType.*;
+import jessy.shipgirlcombatsystem.thrift.ThriftPlayer;
+import jessy.shipgirlcombatsystem.thrift.ThriftWelcome;
 import jessy.shipgirlcombatsystem.util.Phase;
 import static jessy.shipgirlcombatsystem.util.Phase.MOVEMENT_PHASE;
+import jessy.shipgirlcombatsystem.util.ThriftUtil;
+import org.apache.thrift.TException;
+import org.apache.thrift.TProcessor;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.server.TThreadPoolServer;
+import org.apache.thrift.transport.TServerSocket;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.transport.TTransportException;
 
 /**
  *
  * @author dirk
  */
 public class Server {
-    private boolean running = true;
-    
+    private TThreadPoolServer server;
     private ServerSocket socket;
-    private final List<ServerClient> clients = Collections.synchronizedList(new ArrayList<ServerClient>());
     private HexMap gameState = new HexMap(15);
-    private Set<ServerClient> waitingOn = Collections.synchronizedSet(new HashSet<ServerClient>());
     private Phase currentPhase = Phase.INIT_PHASE;
+    private final GameProcessor processor = new GameProcessor();
+    private int turn = 0;
+    private List<ThriftCommand> turnActions = Collections.synchronizedList(new LinkedList<ThriftCommand>());
     
-    public Server(int port) throws IOException {
+    public static void main(String[] args) throws IOException, TTransportException {
+        Server server1 = new Server(3333);
+    }
+    
+    public Server(int port) throws IOException, TTransportException {
         this.socket = new ServerSocket(port);
-    }
-    
-    public void start() {
-        while(running) {
-            try {
-                ServerClient newClient = new ServerClient(socket.accept());
-                clients.add(newClient);
-                newClient.sendData(new GameInitPacket(new HexMap(gameState)));
-                (new Thread(newClient)).start();
-            } catch (IOException ex) {
-                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    }
-    
-    public void stop() throws IOException {
-        running = false;
-        for(ServerClient s : clients) {
-            try {
-                s.close();
-            } catch (IOException ex) {
-                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    }
-    
-    private void serverRecieve(ServerClient client, Packet packet) {
-        switch(packet.type) {
-            case END_MOVE:
-                serverEndMove(client, (List<Command>) packet.getData()); break;
-            case END_FIRE:
-                serverEndFire(client, (List<Command>) packet.getData()); break;
-            case END_LOBBY:
-                serverStartGame(client, (HexMap) packet.getData()); break;
-        }
-    }
-
-    private void serverEndMove(ServerClient client, List<Command> list) {
-        waitingOn.remove(client);
-        for(Command c : list) {
-            c.applyCommand(gameState);
-        }
-        if(waitingOn.isEmpty()) {
-            sendMapToAllClients();
-        }
-                
-    }
-
-    private void serverEndFire(ServerClient client, List<Command> list) {
-        waitingOn.remove(client);
-        for(Command c : list) {
-            c.applyCommand(gameState);
-        }
-        if(waitingOn.isEmpty()) {
-            sendMapToAllClients();
-        }
-    }
-
-    private void serverStartGame(ServerClient client, HexMap hexMap) {
-        assert(currentPhase == Phase.INIT_PHASE);
         
-        gameState = hexMap;
-        currentPhase = MOVEMENT_PHASE;
-        sendMapToAllClients();
+        gameState.add(new Ship(gameState.getNewUniqueID(), new Player("A", Color.pink)), new Hex(2,2));
+        gameState.add(new Ship(gameState.getNewUniqueID(), new Player("B", new Color(50,255,50))), new Hex(2,-2));
+        gameState.add(new Ship(gameState.getNewUniqueID(), new Player("C", Color.YELLOW)), new Hex(-2,2));
+        gameState.add(new Ship(gameState.getNewUniqueID(), new Player("D",  new Color(50,50,255))), new Hex(-2,-2));
+        
+        TServerSocket tsock = new TServerSocket(socket);
+        TThreadPoolServer.Args args = new TThreadPoolServer.Args(tsock);
+        args.requestTimeout(2);
+        args.requestTimeoutUnit(TimeUnit.HOURS);
+        args.processor(new ShipGirlCombatSystemServer.Processor<>(processor));
+        server = new TThreadPoolServer(args);
+        server.serve();
     }
-
-    private void sendMapToAllClients() {
-        gameState.setPhase(currentPhase);
-        waitingOn.clear();
-        waitingOn.addAll(clients);
-        final HexMap update= new HexMap(gameState);
-        for(ServerClient c : clients) {
-            c.sendData(new GenericPacket(PacketType.GAME_UPDATE_MOVE, update));
+    
+    public void addCommands(List<ThriftCommand> commands) {
+        if(commands != null) {
+            turnActions.addAll(commands);
         }
     }
+    
+    public ThriftGameState packageGameState() {
+        applyCommands();
+        ThriftGameState state = new ThriftGameState();
+        state.setMapRadious(gameState.getRadious());
+        state.setTurn(turn);
+        state.setItems(ThriftUtil.makeThrift(gameState));
+        
+        currentPhase = gameState.getPhase();
+        state.setPhaseCode(currentPhase.ordinal());
+        return state;
+    }
 
-    private class ServerClient implements Runnable {
-        final Socket socket;
-        private final ObjectOutputStream oos;
-        private final ObjectInputStream ois;
-        private final AtomicBoolean running = new AtomicBoolean(true);
-
-        public ServerClient(Socket socket) throws IOException {
-            this.socket = socket;
-            oos = new ObjectOutputStream(socket.getOutputStream());
-            ois = new ObjectInputStream(socket.getInputStream());
+    private void applyCommands() {
+        turn++;
+        for(ThriftCommand cmd : turnActions) {
+            if("Enum".equals(cmd.type)) {
+                Command c = ShipCommands.fromEnum(cmd.commandCode, cmd);
+                c.applyCommand(gameState);
+            }
         }
+        gameState.advancePhase();
+        processor.waiter = new WaitObject(processor.playerList);
+        turnActions = Collections.synchronizedList(new LinkedList<ThriftCommand>());
+    }
 
-        private void close() throws IOException {
-            running.set(false);
-            ois.close();
-            oos.close();
-            socket.close();
+    private class GameProcessor implements ShipGirlCombatSystemServer.Iface {
+        private Map<String, Player> playerList = Collections.synchronizedMap(new LinkedHashMap<String, Player>());
+        private WaitObject waiter = new WaitObject(playerList);
+
+        @Override
+        public ThriftWelcome joinPlayer(ThriftPlayer player) throws ShipGirlServiceError, TException {
+            if(playerList.containsKey(player.name)) {
+                return new ThriftWelcome("Welcome back.");
+            }
+            
+            playerList.put(player.name, new Player(player));
+            waiter.add(player.name);
+            return new ThriftWelcome("Glad you could join us.");
         }
 
         @Override
-        public void run() {
-            while(running.get()) {
-                try {
-                    Object readObject = ois.readObject();
-                    if(readObject instanceof Packet) {
-                        serverRecieve(this, (Packet) readObject);
-                    }
-                } catch (IOException ex) {
-                    Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (ClassNotFoundException ex) {
-                    Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
-                }
+        public ThriftGameState donePhase(ThriftCommandList commands) throws ShipGirlServiceError, TException {
+            addCommands(commands.commands);
+            switch(commands.type) {
+                case DoneLobby:
+                case DoneMove:
+                case DoneFire:
             }
+
+            return waiter.waitTillDone(commands.player.name);
         }
 
-        private void sendData(Packet p) {
-            try {
-                oos.writeUnshared(p);
-            } catch (IOException ex) {
-                Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    
+    private class WaitObject {
+        private final Set<String> waitingOn = Collections.synchronizedSet(new LinkedHashSet<String>());
+        private ThriftGameState game;
+        
+        private WaitObject(Map<String, Player> playerList) {
+            waitingOn.addAll(playerList.keySet());
+        }
+
+        private synchronized void add(String name) {
+            waitingOn.add(name);
+        }
+        
+        private synchronized ThriftGameState waitTillDone(String name) {
+            waitingOn.remove(name);
+            if(waitingOn.isEmpty()) {
+                wakeAll(packageGameState());
             }
+            while(game == null) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {}
+            }
+            
+            return game;
+        }
+        
+        private synchronized void wakeAll(ThriftGameState game) {
+            this.game = game;
+            this.notifyAll();
         }
     }
 }

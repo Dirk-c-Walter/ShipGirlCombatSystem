@@ -114,7 +114,7 @@ public class TestWindow extends JFrame {
     }//GEN-LAST:event_phaseButtonActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        map.addCommand(new Command() {
+        /*map.addCommand(new Command() {
 
             @Override
             public void applyCommand(HexMap board) {
@@ -130,7 +130,7 @@ public class TestWindow extends JFrame {
             public boolean appliesToPhase(Phase p) {
                 return p == Phase.INIT_PHASE;
             }
-        });
+        });*/
         map.repaint();
     }//GEN-LAST:event_jButton1ActionPerformed
 

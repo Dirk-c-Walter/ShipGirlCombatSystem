@@ -5,16 +5,20 @@
 package jessy.shipgirlcombatsystem.map;
 
 import java.awt.Color;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import jessy.shipgirlcombatsystem.screens.MapPanel;
 import jessy.shipgirlcombatsystem.ship.Ship;
+import jessy.shipgirlcombatsystem.thrift.ThriftGameState;
+import jessy.shipgirlcombatsystem.thrift.ThriftShip;
 import jessy.shipgirlcombatsystem.util.Phase;
-import static jessy.shipgirlcombatsystem.util.Phase.INIT_PHASE;
-import static jessy.shipgirlcombatsystem.util.Phase.WAIT_PHASE;
+import static jessy.shipgirlcombatsystem.util.Phase.*;
+import jessy.shipgirlcombatsystem.util.ThriftUtil;
 
 /**
  *
@@ -33,18 +37,29 @@ public class HexMap {
     
     public HexMap(int size) {
         radious = size;
-
     }
     
     public HexMap(HexMap other) {
         radious = other.radious;
+        phase = other.phase;
+        player = other.player;
         
         board = Collections.synchronizedMap(new LinkedHashMap<>(other.board));
-        itemList = Collections.synchronizedMap(new LinkedHashMap<String, BoardItem>(other.itemList.size()));
+        itemList = Collections.synchronizedMap(new LinkedHashMap<String, BoardItem>(other.itemList));
         itemLocation = Collections.synchronizedMap(new LinkedHashMap<String, Hex>(other.itemLocation));
-        //itemlist needs a deep copy.
-        for(Map.Entry<String, BoardItem> i : other.itemList.entrySet()) {
-            itemList.put(i.getKey(), i.getValue().clone());
+
+    }
+
+    public HexMap(ThriftGameState newState) {
+        radious = newState.mapRadious;
+        player = MapPanel.getInstance().getPlayerData();
+        phase = Phase.values()[newState.phaseCode];
+
+        for(ThriftShip item : newState.getItems()) {
+            BoardItem val = ThriftUtil.convertThrift(item);
+            if(val != null) {
+                add(val, new Hex(item.position));
+            }
         }
     }
     
@@ -96,6 +111,10 @@ public class HexMap {
     public void setPhase(Phase phase) {
         this.phase = phase;
     }
+    
+    public Collection<BoardItem> getAllItems() {
+        return Collections.unmodifiableCollection(itemList.values());
+    }
    
     public boolean inBounds(Hex a) {
         if(Math.abs(a.getQ()) > radious) {
@@ -145,12 +164,21 @@ public class HexMap {
         final LinkedHashSet<String> s = board.get(h);
         if(s != null && !s.isEmpty()) {
             if(s.size() == 1) {
-                return Color.PINK;
+                return getEntity(s.toArray()[0].toString()).getOwner().getPlayerColor();
             } else {
-                return Color.RED;
+                return Color.lightGray;
             }    
         }
         return Color.BLACK;
+    }
+
+    public void advancePhase() {
+        if(phase == MOVEMENT_PHASE) {
+            phase = ACTION_PHASE;
+        } else {
+            phase = MOVEMENT_PHASE;
+        }
+               
     }
 
   

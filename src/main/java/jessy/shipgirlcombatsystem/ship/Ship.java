@@ -8,11 +8,16 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import javax.swing.ImageIcon;
 import jessy.shipgirlcombatsystem.map.BoardItem;
 import jessy.shipgirlcombatsystem.map.Direction;
 import jessy.shipgirlcombatsystem.map.Hex;
 import jessy.shipgirlcombatsystem.map.HexMap;
+import jessy.shipgirlcombatsystem.map.Player;
+import jessy.shipgirlcombatsystem.screens.MapPanel;
+import jessy.shipgirlcombatsystem.thrift.ThriftShip;
 
 /**
  *
@@ -21,15 +26,17 @@ import jessy.shipgirlcombatsystem.map.HexMap;
 public class Ship implements BoardItem {
     private static final int overflow = 4;
     private final String id;
+    private final Player owner;
     private String name;
     private int speedQ =0;
     private int speedR =0;
     private Direction facing = Direction.NORTH;
     private ImageIcon image = new javax.swing.ImageIcon(getClass().getResource("/jessy/shipgirlcombatsystem/images/BaseShip.png"));
 
-    public Ship(String id) {
+    public Ship(String id, Player owner) {
         this.id = id;
         name= "Nautilus " + id;
+        this.owner = owner;
     }
     
     public Direction getFacing() {
@@ -139,12 +146,46 @@ public class Ship implements BoardItem {
 
     @Override
     public BoardItem clone() {
-        return new Ship(id);
+        return new Ship(id, owner);
     }
 
     @Override
     public String getEntityId() {
         return id;
+    }
+    
+    @Override
+    public Player getOwner() {
+        return owner;
+    }
+
+    @Override
+    public ThriftShip thrift() {
+        ThriftShip thrift = new ThriftShip();
+        thrift.setId(id);
+        thrift.setOwner(owner.thrift());
+        thrift.setType("Ship");
+        thrift.setPosition(MapPanel.getInstance().getBoard().getLocation(id).thrift());
+        
+        Map<String,String> properties = new LinkedHashMap<>();
+        properties.put("Facing", facing.name());
+        properties.put("Name", name);
+        properties.put("SpeedR", ""+speedR);
+        properties.put("SpeedQ", ""+speedQ);
+        
+        thrift.setProperties(properties);
+        
+        return thrift;
+    }
+
+    public void populateFromThrift(ThriftShip item) {
+        Map<String, String> props = item.getProperties();
+        if(props != null) {
+            facing = Direction.valueOf(props.get("Facing"));
+            name = props.get("Name");
+            speedR = Integer.parseInt(props.get("SpeedR"));
+            speedQ = Integer.parseInt(props.get("SpeedQ"));
+        }
     }
     
 }

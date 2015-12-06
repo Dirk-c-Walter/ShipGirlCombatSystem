@@ -8,6 +8,7 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.util.ArrayList;
 import java.util.List;
+import jessy.shipgirlcombatsystem.thrift.ThriftHex;
 import jessy.shipgirlcombatsystem.util.MathUtil;
 
 /**
@@ -19,6 +20,10 @@ public class Hex implements Cloneable {
     
     public Hex() {
         this(0,0);
+    }
+    
+    public Hex(ThriftHex h) {
+        this(h.q, h.r);
     }
     
     public Hex(Hex h) {
@@ -169,6 +174,10 @@ public class Hex implements Cloneable {
             return false;
         }
         return true;
+    }
+
+    public ThriftHex thrift() {
+        return new ThriftHex(q,r);
     }
     
 }

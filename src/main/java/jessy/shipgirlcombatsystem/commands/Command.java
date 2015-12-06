@@ -5,6 +5,7 @@
 package jessy.shipgirlcombatsystem.commands;
 
 import jessy.shipgirlcombatsystem.map.HexMap;
+import jessy.shipgirlcombatsystem.thrift.ThriftCommand;
 import jessy.shipgirlcombatsystem.util.Phase;
 
 /**
@@ -15,4 +16,6 @@ public interface Command {
     public boolean appliesToPhase(Phase p);
     public void applyCommand(HexMap board);
     public void undoCommand(HexMap board);
+
+    public ThriftCommand thrift();
 }
