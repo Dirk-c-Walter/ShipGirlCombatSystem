@@ -39,13 +39,12 @@ public class Client {
     private Player me;
     
     public Client(String hostname) throws IOException, TTransportException {
-        this.socket = new Socket(hostname, 3333);
+        this.socket = new Socket(hostname, 3300);
         TProtocol tprot = new TBinaryProtocol(new TSocket(socket), false, true);// new TCompactProtocol(new TSocket(socket));//
         client = new ShipGirlCombatSystemServer.Client(tprot);
     }
     
     public String join(Player newPlayer) throws TException {
-
         me = newPlayer;
         return client.joinPlayer(newPlayer.thrift()).getMotd();
     }

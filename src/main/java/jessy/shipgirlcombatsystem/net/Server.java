@@ -66,7 +66,7 @@ public class Server {
     private final MapPanel panel;
     
     public static void main(String[] args) throws IOException, TTransportException {
-        Server server1 = new Server(3333);
+        Server server1 = new Server(3300);
     }
     
     public Server(int port) throws IOException, TTransportException {
@@ -127,6 +127,7 @@ public class Server {
 
         @Override
         public ThriftWelcome joinPlayer(ThriftPlayer player) throws ShipGirlServiceError, TException {
+            System.out.println("Player " + player.name + " joined.");
             if(playerList.containsKey(player.name)) {
                 return new ThriftWelcome("Welcome back.");
             }
@@ -139,6 +140,7 @@ public class Server {
         @Override
         public ThriftGameState donePhase(ThriftCommandList commands) throws ShipGirlServiceError, TException {
             addCommands(commands.commands);
+            System.out.println("Player " + commands.player.name + " is done with " + commands.type.toString());
             switch(commands.type) {
                 case DoneLobby:
                 case DoneMove:
