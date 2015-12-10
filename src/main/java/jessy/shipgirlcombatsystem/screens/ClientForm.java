@@ -125,7 +125,7 @@ public class ClientForm extends javax.swing.JFrame {
         final MapPanel map = MapPanel.getInstance();
         map.setPlayer(player);
         try {
-            String msg =map.connectTo(hostname);
+            String msg = map.connectTo(hostname);
             JOptionPane.showConfirmDialog(rootPane, msg);
             setVisible(false);
         } catch (IOException ex) {

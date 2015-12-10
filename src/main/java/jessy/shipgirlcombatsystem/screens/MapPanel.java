@@ -179,7 +179,7 @@ public class MapPanel extends javax.swing.JPanel {
             @Override
             public void run() {
                 try {
-                    HexMap newTurn = client.doneTurn(cmd, cur,cur.getPhase());
+                    HexMap newTurn = client.doneTurn(cmd, cur, cur.getPhase());
                     applyNewTurn(newTurn, newTurn.getPhase());
                 } catch (TException ex) {
                     Logger.getLogger(MapPanel.class.getName()).log(Level.SEVERE, null, ex);
