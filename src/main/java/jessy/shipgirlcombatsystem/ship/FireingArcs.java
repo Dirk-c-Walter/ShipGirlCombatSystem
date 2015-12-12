@@ -32,7 +32,7 @@ public enum FireingArcs {
     LEFT_BACK("LeftBack"),
     POLE_BACK("PoleBack"),
     UPPER_LEFT_FRONT("UpperLeftFront"),
-    UPPER_RIGHT_FRONT("UpperRihgtFront");
+    UPPER_RIGHT_FRONT("UpperRightFront");
     
     private final ImageIcon img;
     
@@ -42,7 +42,7 @@ public enum FireingArcs {
     
     public EnumSet<Direction> allowableDirections(Direction facing) {
         EnumSet set = EnumSet.noneOf(Direction.class);
-        Direction temp = facing;
+        Direction temp;
         switch(this) {
             case NONE: return set;
             case FORWARD: set.add(facing); return set;
@@ -73,5 +73,13 @@ public enum FireingArcs {
     
     public boolean canHitSameHex() {
         return this == NONE || this == FULL;
+    }
+    
+    public ImageIcon getIcon() {
+        return img;
+    }
+    
+    public Image getImage() {
+        return img.getImage();
     }
 }
