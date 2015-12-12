@@ -2,16 +2,18 @@
 package jessy.shipgirlcombatsystem.ship.systems;
 
 import javax.swing.JPanel;
+import jessy.shipgirlcombatsystem.ship.FireingArcs;
 import jessy.shipgirlcombatsystem.ship.IShipSystem;
+import jessy.shipgirlcombatsystem.ship.RangeFactor;
 
 /**
  *
  * @author dirk
  */
 public class ShipWeaponSystem implements IShipSystem {
-    public enum RangeFactor {
-        
-    }
+    public RangeFactor range = RangeFactor.MELEE;
+    public FireingArcs arc = FireingArcs.NONE;
+    
 
     public ShipWeaponSystem() {
         
