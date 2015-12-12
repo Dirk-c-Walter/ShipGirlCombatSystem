@@ -32,6 +32,8 @@ public class Ship implements BoardItem {
     private int speedR =0;
     private Direction facing = Direction.NORTH;
     private ImageIcon image = new javax.swing.ImageIcon(getClass().getResource("/jessy/shipgirlcombatsystem/images/BaseShip.png"));
+    private Shield shield = new Shield();
+    private Hull hull = new Hull();
 
     public Ship(String id, Player owner) {
         this.id = id;
@@ -185,6 +187,22 @@ public class Ship implements BoardItem {
             name = props.get("Name");
             speedR = Integer.parseInt(props.get("SpeedR"));
             speedQ = Integer.parseInt(props.get("SpeedQ"));
+        }
+    }
+
+    private static class Shield {
+        int maxShield = 10;
+        int shieldRegen = 2;
+        int currentShield = maxShield;
+                
+
+        public Shield() {
+        }
+    }
+
+    private static class Hull {
+
+        public Hull() {
         }
     }
     
