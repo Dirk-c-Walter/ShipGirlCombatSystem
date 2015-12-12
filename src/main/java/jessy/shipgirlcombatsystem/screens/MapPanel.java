@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import jessy.shipgirlcombatsystem.commands.Command;
@@ -37,6 +38,7 @@ import jessy.shipgirlcombatsystem.net.Client;
 import jessy.shipgirlcombatsystem.ship.Ship;
 import jessy.shipgirlcombatsystem.util.MathUtil;
 import jessy.shipgirlcombatsystem.util.Phase;
+import static jessy.shipgirlcombatsystem.util.Phase.WAIT_PHASE;
 import jessy.shipgirlcombatsystem.util.ThriftUtil;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransportException;
@@ -186,8 +188,13 @@ public class MapPanel extends javax.swing.JPanel {
     
     public void sendCommands() {
         assert(client != null);
+        if(current.getPhase() == WAIT_PHASE) {
+            JOptionPane.showConfirmDialog(this, "Please wait for the other players.");
+            return;
+        }
         final LinkedList<Command> cmd = commands;
         final HexMap cur = current;
+        current.setPhase(Phase.WAIT_PHASE);
         ThriftUtil.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -200,7 +207,6 @@ public class MapPanel extends javax.swing.JPanel {
             }
             
         });
-        current.setPhase(Phase.WAIT_PHASE);
         commands = new LinkedList<>();
     }
     

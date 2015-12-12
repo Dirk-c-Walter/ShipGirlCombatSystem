@@ -125,6 +125,7 @@ public class TestWindow extends JFrame {
     private void phaseButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_phaseButtonActionPerformed
         if(map.getClient() == null) {
             (new ClientForm()).setVisible(true);
+            phaseButton.setText("End Lobby");
             return;
         }
         phaseButton.setText("Wait");

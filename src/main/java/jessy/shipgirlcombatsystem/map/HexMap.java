@@ -33,7 +33,7 @@ public class HexMap {
     private static final AtomicLong uniqueidCounter = new AtomicLong(0);
     
     private Player player = null;
-    private Phase phase = WAIT_PHASE;
+    private Phase phase = INIT_PHASE;
     
     public HexMap(int size) {
         radious = size;
