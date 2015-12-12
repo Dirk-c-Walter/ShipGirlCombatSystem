@@ -18,6 +18,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -85,6 +86,18 @@ public class MapPanel extends javax.swing.JPanel {
     
     public void applyNewTurn(final HexMap newTurn, Phase phase) {
         SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                startOfTurn = newTurn;
+                current = new HexMap(startOfTurn);
+                commands = new LinkedList<>();
+                repaint();
+            } 
+        });
+    }
+    
+    public void applyNewTurnAndWait(final HexMap newTurn, Phase phase) throws InterruptedException, InvocationTargetException {
+        SwingUtilities.invokeAndWait(new Runnable() {
             @Override
             public void run() {
                 startOfTurn = newTurn;
@@ -179,7 +192,7 @@ public class MapPanel extends javax.swing.JPanel {
             @Override
             public void run() {
                 try {
-                    HexMap newTurn = client.doneTurn(cmd, cur, cur.getPhase());
+                    HexMap newTurn = client.doneTurn(cmd, cur, startOfTurn.getPhase());
                     applyNewTurn(newTurn, newTurn.getPhase());
                 } catch (TException ex) {
                     Logger.getLogger(MapPanel.class.getName()).log(Level.SEVERE, null, ex);

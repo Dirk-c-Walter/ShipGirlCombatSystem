@@ -7,22 +7,16 @@ package jessy.shipgirlcombatsystem.net;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jessy.shipgirlcombatsystem.commands.Command;
@@ -41,14 +35,10 @@ import static jessy.shipgirlcombatsystem.thrift.ThriftPacketType.*;
 import jessy.shipgirlcombatsystem.thrift.ThriftPlayer;
 import jessy.shipgirlcombatsystem.thrift.ThriftWelcome;
 import jessy.shipgirlcombatsystem.util.Phase;
-import static jessy.shipgirlcombatsystem.util.Phase.MOVEMENT_PHASE;
 import jessy.shipgirlcombatsystem.util.ThriftUtil;
 import org.apache.thrift.TException;
-import org.apache.thrift.TProcessor;
-import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
-import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransportException;
 
 /**
@@ -116,7 +106,15 @@ public class Server {
             }
         }
         gameState.advancePhase();
-        panel.applyNewTurn(gameState, currentPhase);
+        currentPhase = gameState.getPhase();
+        System.out.println("Advancing to turn: " + turn + " and phase: " + currentPhase);
+        try {
+            panel.applyNewTurnAndWait(gameState, currentPhase);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InvocationTargetException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
         processor.waiter = new WaitObject(processor.playerList);
         turnActions = Collections.synchronizedList(new LinkedList<ThriftCommand>());
     }

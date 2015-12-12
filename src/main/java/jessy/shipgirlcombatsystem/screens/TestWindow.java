@@ -5,6 +5,7 @@
 package jessy.shipgirlcombatsystem.screens;
 
 import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 import jessy.shipgirlcombatsystem.commands.Command;
 import jessy.shipgirlcombatsystem.map.Hex;
 import jessy.shipgirlcombatsystem.map.HexMap;
@@ -29,6 +30,17 @@ public class TestWindow extends JFrame {
         shipFrame = new PanelFrame(map.shipPanel);
         map.shipPanel.windowContainer = shipFrame;
     }
+    
+    public void updatePhase(final Phase p) {
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                phaseButton.setText("Done " + p);
+            }
+            
+        });
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -44,7 +56,13 @@ public class TestWindow extends JFrame {
         jButton3 = new javax.swing.JButton();
         jButton1 = new javax.swing.JButton();
         phaseButton = new javax.swing.JButton();
-        showPanel = new MapPanel();
+        showPanel = new MapPanel() {
+            public void applyNewTurn(final HexMap newTurn, Phase phase) {
+                super.applyNewTurn(newTurn, phase);
+
+                updatePhase(phase);
+            }
+        };
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new java.awt.GridBagLayout());
@@ -68,7 +86,7 @@ public class TestWindow extends JFrame {
         });
         buttonPanel.add(jButton1);
 
-        phaseButton.setText("phase");
+        phaseButton.setText("connect");
         phaseButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 phaseButtonActionPerformed(evt);
@@ -109,6 +127,7 @@ public class TestWindow extends JFrame {
             (new ClientForm()).setVisible(true);
             return;
         }
+        phaseButton.setText("Wait");
         map.sendCommands();
         map.repaint();
     }//GEN-LAST:event_phaseButtonActionPerformed
