@@ -145,8 +145,11 @@ public class Hex implements Cloneable {
     }
     
     public Hex move(Direction dir, int distance) {
-        return new Hex(q + (distance*dir.q), r + (distance*dir.r));
-                
+        return new Hex(q + (distance*dir.q), r + (distance*dir.r));       
+    }
+    
+    public Hex move(Direction dir) {
+        return move(dir, 1);
     }
 
     @Override
