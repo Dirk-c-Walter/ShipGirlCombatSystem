@@ -26,6 +26,7 @@ import jessy.shipgirlcombatsystem.map.HexMap;
 import jessy.shipgirlcombatsystem.map.Player;
 import jessy.shipgirlcombatsystem.screens.MapPanel;
 import jessy.shipgirlcombatsystem.ship.Ship;
+import jessy.shipgirlcombatsystem.ship.systems.ShipWeaponSystem;
 import jessy.shipgirlcombatsystem.thrift.ShipGirlCombatSystemServer;
 import jessy.shipgirlcombatsystem.thrift.ShipGirlServiceError;
 import jessy.shipgirlcombatsystem.thrift.ThriftCommand;
@@ -63,7 +64,10 @@ public class Server {
         this.socket = new ServerSocket(port);
         panel = new MapPanel();
         
-        gameState.add(new Ship(gameState.getNewUniqueID(), new Player("A", Color.pink)), new Hex(2,2));
+        Ship redShip = new Ship(gameState.getNewUniqueID(), new Player("A", Color.pink));
+        redShip.addEquipment(new ShipWeaponSystem("Big Gun", redShip));
+        redShip.addEquipment(new ShipWeaponSystem("Small Gun", redShip));
+        gameState.add(redShip, new Hex(2,2));
         gameState.add(new Ship(gameState.getNewUniqueID(), new Player("B", new Color(50,255,50))), new Hex(2,-2));
         gameState.add(new Ship(gameState.getNewUniqueID(), new Player("C", Color.YELLOW)), new Hex(-2,2));
         gameState.add(new Ship(gameState.getNewUniqueID(), new Player("D",  new Color(50,50,255))), new Hex(-2,-2));

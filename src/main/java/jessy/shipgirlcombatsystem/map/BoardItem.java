@@ -14,12 +14,7 @@ import jessy.shipgirlcombatsystem.thrift.ThriftShip;
  */
 public interface BoardItem extends Cloneable {
 
-    public String getEntityId();
-    
-    public void notifyRemoved(Hex a);
-
-    public void notifyAdded(Hex b);
-    
+    public String getEntityId();    
     public boolean selectable();
     public boolean drawable();
     
@@ -30,10 +25,14 @@ public interface BoardItem extends Cloneable {
      * @param height the height from the center to the bottom/top.
      */
     public void drawItem(Graphics2D g2, Hex position, int size, int height);
-    
-    public void notifySelect();
+ 
+    //events
+    public void notifySelect(HexMap board);
+    //server only events;
+    public void startMovement(HexMap board); //do newtonian during this
+    public void startAction(HexMap board); //starts the action phase.
+    public void endTurn(HexMap board); //ends the action pahse
 
-    public void doNewtonian();
     
     public BoardItem clone();
 

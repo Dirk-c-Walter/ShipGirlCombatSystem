@@ -8,6 +8,7 @@ import jessy.shipgirlcombatsystem.map.Direction;
 import jessy.shipgirlcombatsystem.map.HexMap;
 import jessy.shipgirlcombatsystem.map.Hex;
 import jessy.shipgirlcombatsystem.ship.Ship;
+import jessy.shipgirlcombatsystem.ship.systems.ShipWeaponSystem;
 import jessy.shipgirlcombatsystem.thrift.ThriftCommand;
 import jessy.shipgirlcombatsystem.thrift.ThriftCommandEnum;
 import jessy.shipgirlcombatsystem.util.Phase;
@@ -47,6 +48,10 @@ public class ShipCommands {
     
     public static Command drift(Ship s, Direction dir) {
         return new DriftCommand(s, dir);
+    }
+
+    public static Command fireWeapon(ShipWeaponSystem system, Hex startingHex, Ship target, Hex targetHex) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     private static class MoveForwardCommand implements Command {

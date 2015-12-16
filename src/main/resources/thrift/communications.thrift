@@ -24,12 +24,18 @@ struct ThriftHex {
     2: i32 r;
 }
 
+struct ThriftEquipment {
+    1: string type;
+    4: optional map<string, string> properties;
+}
+
 struct ThriftShip {
     1: string id;
     2: optional ThriftPlayer owner;
     3: string type;
     4: optional map<string, string> properties;
-    5: ThriftHex position;
+    5: optional list<ThriftEquipment> equipment;
+    6: ThriftHex position;
 }
 
 struct ThriftGameState {

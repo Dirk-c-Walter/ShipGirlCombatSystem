@@ -8,7 +8,9 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import jessy.shipgirlcombatsystem.commands.ShipCommands;
 import jessy.shipgirlcombatsystem.map.Direction;
+import jessy.shipgirlcombatsystem.ship.IShipSystem;
 import jessy.shipgirlcombatsystem.ship.Ship;
+import jessy.shipgirlcombatsystem.util.Phase;
 
 /**
  *
@@ -34,6 +36,15 @@ public class ShipPanel extends javax.swing.JPanel {
                 speedNLabel.setText("" + (-ship.getSpeedR()));
                 speedSWLabel.setText("" + (ship.getSpeedQ()));
                 windowContainer.setVisible(true);
+                if(MapPanel.getInstance().getBoard().getPhase() == Phase.ACTION_PHASE) {
+                    tabbedPanel.setSelectedIndex(1);
+                } else {
+                    tabbedPanel.setSelectedIndex(0);
+                }
+                actionPanel.removeAll();
+                for(IShipSystem item : ship.getEquipment()) {
+                    actionPanel.add(item.getSystemPanel());
+                }
                 requestFocus();
             }
         });
@@ -50,30 +61,35 @@ public class ShipPanel extends javax.swing.JPanel {
         java.awt.GridBagConstraints gridBagConstraints;
 
         shipNameField = new javax.swing.JLabel();
-        jPanel1 = new javax.swing.JPanel();
+        tabbedPanel = new javax.swing.JTabbedPane();
+        movementPanel = new javax.swing.JPanel();
+        jPanel5 = new javax.swing.JPanel();
         speedNLabel = new javax.swing.JLabel();
         speedNWLabel = new javax.swing.JLabel();
         speedSWLabel = new javax.swing.JLabel();
-        jPanel2 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        upButton = new javax.swing.JButton();
-        jLabel3 = new javax.swing.JLabel();
-        jButton2 = new javax.swing.JButton();
-        jLabel4 = new javax.swing.JLabel();
-        jButton3 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
-        jLabel5 = new javax.swing.JLabel();
-        jButton6 = new javax.swing.JButton();
-        jLabel6 = new javax.swing.JLabel();
-        jButton5 = new javax.swing.JButton();
-        jLabel7 = new javax.swing.JLabel();
-        jPanel3 = new javax.swing.JPanel();
-        jLabel2 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
-        jLabel8 = new javax.swing.JLabel();
-        jButton7 = new javax.swing.JButton();
-        jLabel9 = new javax.swing.JLabel();
-        jButton8 = new javax.swing.JButton();
+        jPanel6 = new javax.swing.JPanel();
+        jLabel10 = new javax.swing.JLabel();
+        upButton1 = new javax.swing.JButton();
+        jLabel11 = new javax.swing.JLabel();
+        jButton9 = new javax.swing.JButton();
+        jLabel12 = new javax.swing.JLabel();
+        jButton10 = new javax.swing.JButton();
+        jButton11 = new javax.swing.JButton();
+        jLabel13 = new javax.swing.JLabel();
+        jButton12 = new javax.swing.JButton();
+        jLabel14 = new javax.swing.JLabel();
+        jButton13 = new javax.swing.JButton();
+        jLabel15 = new javax.swing.JLabel();
+        jPanel7 = new javax.swing.JPanel();
+        jLabel16 = new javax.swing.JLabel();
+        jButton14 = new javax.swing.JButton();
+        jLabel17 = new javax.swing.JLabel();
+        jButton15 = new javax.swing.JButton();
+        jLabel18 = new javax.swing.JLabel();
+        jButton16 = new javax.swing.JButton();
+        actionTabPanel = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        actionPanel = new javax.swing.JPanel();
 
         setLayout(new java.awt.GridBagLayout());
 
@@ -87,11 +103,14 @@ public class ShipPanel extends javax.swing.JPanel {
         gridBagConstraints.gridy = 0;
         gridBagConstraints.gridheight = 2;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(10, 10, 10, 10);
         add(shipNameField, gridBagConstraints);
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Speed"));
-        jPanel1.setMinimumSize(new java.awt.Dimension(60, 90));
-        jPanel1.setLayout(new java.awt.GridLayout(3, 1));
+        movementPanel.setLayout(new java.awt.GridBagLayout());
+
+        jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder("Speed"));
+        jPanel5.setMinimumSize(new java.awt.Dimension(60, 90));
+        jPanel5.setLayout(new java.awt.GridLayout(3, 1));
 
         speedNLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/jessy/shipgirlcombatsystem/images/ArrowN.png"))); // NOI18N
         speedNLabel.setText("0");
@@ -99,195 +118,206 @@ public class ShipPanel extends javax.swing.JPanel {
         speedNLabel.setMaximumSize(new java.awt.Dimension(66, 22));
         speedNLabel.setMinimumSize(new java.awt.Dimension(66, 22));
         speedNLabel.setPreferredSize(new java.awt.Dimension(66, 22));
-        jPanel1.add(speedNLabel);
+        jPanel5.add(speedNLabel);
 
         speedNWLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/jessy/shipgirlcombatsystem/images/ArrowNW.png"))); // NOI18N
         speedNWLabel.setText("0");
         speedNWLabel.setMaximumSize(new java.awt.Dimension(66, 16));
         speedNWLabel.setMinimumSize(new java.awt.Dimension(66, 16));
         speedNWLabel.setPreferredSize(new java.awt.Dimension(66, 16));
-        jPanel1.add(speedNWLabel);
+        jPanel5.add(speedNWLabel);
 
         speedSWLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/jessy/shipgirlcombatsystem/images/ArrowSW.png"))); // NOI18N
         speedSWLabel.setText("0");
         speedSWLabel.setPreferredSize(new java.awt.Dimension(66, 18));
-        jPanel1.add(speedSWLabel);
+        jPanel5.add(speedSWLabel);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        add(jPanel1, gridBagConstraints);
+        movementPanel.add(jPanel5, gridBagConstraints);
 
-        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("Thrusters"));
-        jPanel2.setPreferredSize(new java.awt.Dimension(200, 200));
-        jPanel2.setLayout(new java.awt.GridLayout(4, 3));
-        jPanel2.add(jLabel1);
+        jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder("Thrusters"));
+        jPanel6.setPreferredSize(new java.awt.Dimension(200, 200));
+        jPanel6.setLayout(new java.awt.GridLayout(4, 3));
+        jPanel6.add(jLabel10);
 
-        upButton.setText("up");
-        upButton.addActionListener(new java.awt.event.ActionListener() {
+        upButton1.setText("up");
+        upButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                upButtonActionPerformed(evt);
+                upButton1ActionPerformed(evt);
             }
         });
-        jPanel2.add(upButton);
-        jPanel2.add(jLabel3);
+        jPanel6.add(upButton1);
+        jPanel6.add(jLabel11);
 
-        jButton2.setText("side");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
+        jButton9.setText("side");
+        jButton9.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+                jButton9ActionPerformed(evt);
             }
         });
-        jPanel2.add(jButton2);
-        jPanel2.add(jLabel4);
+        jPanel6.add(jButton9);
+        jPanel6.add(jLabel12);
 
-        jButton3.setText("side");
-        jButton3.addActionListener(new java.awt.event.ActionListener() {
+        jButton10.setText("side");
+        jButton10.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton3ActionPerformed(evt);
+                jButton10ActionPerformed(evt);
             }
         });
-        jPanel2.add(jButton3);
+        jPanel6.add(jButton10);
 
-        jButton4.setText("side");
-        jButton4.addActionListener(new java.awt.event.ActionListener() {
+        jButton11.setText("side");
+        jButton11.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4ActionPerformed(evt);
+                jButton11ActionPerformed(evt);
             }
         });
-        jPanel2.add(jButton4);
-        jPanel2.add(jLabel5);
+        jPanel6.add(jButton11);
+        jPanel6.add(jLabel13);
 
-        jButton6.setText("side");
-        jButton6.addActionListener(new java.awt.event.ActionListener() {
+        jButton12.setText("side");
+        jButton12.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton6ActionPerformed(evt);
+                jButton12ActionPerformed(evt);
             }
         });
-        jPanel2.add(jButton6);
-        jPanel2.add(jLabel6);
+        jPanel6.add(jButton12);
+        jPanel6.add(jLabel14);
 
-        jButton5.setText("down");
-        jButton5.addActionListener(new java.awt.event.ActionListener() {
+        jButton13.setText("down");
+        jButton13.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton5ActionPerformed(evt);
+                jButton13ActionPerformed(evt);
             }
         });
-        jPanel2.add(jButton5);
-        jPanel2.add(jLabel7);
+        jPanel6.add(jButton13);
+        jPanel6.add(jLabel15);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-        add(jPanel2, gridBagConstraints);
+        movementPanel.add(jPanel6, gridBagConstraints);
 
-        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Main Engine"));
-        jPanel3.setLayout(new java.awt.GridLayout(2, 3));
-        jPanel3.add(jLabel2);
+        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder("Main Engine"));
+        jPanel7.setLayout(new java.awt.GridLayout(2, 3));
+        jPanel7.add(jLabel16);
 
-        jButton1.setText("forward");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        jButton14.setText("forward");
+        jButton14.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                jButton14ActionPerformed(evt);
             }
         });
-        jPanel3.add(jButton1);
-        jPanel3.add(jLabel8);
+        jPanel7.add(jButton14);
+        jPanel7.add(jLabel17);
 
-        jButton7.setText("turn Left");
-        jButton7.addActionListener(new java.awt.event.ActionListener() {
+        jButton15.setText("turn Left");
+        jButton15.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton7ActionPerformed(evt);
+                jButton15ActionPerformed(evt);
             }
         });
-        jPanel3.add(jButton7);
-        jPanel3.add(jLabel9);
+        jPanel7.add(jButton15);
+        jPanel7.add(jLabel18);
 
-        jButton8.setText("turn Right");
-        jButton8.addActionListener(new java.awt.event.ActionListener() {
+        jButton16.setText("turn Right");
+        jButton16.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton8ActionPerformed(evt);
+                jButton16ActionPerformed(evt);
             }
         });
-        jPanel3.add(jButton8);
+        jPanel7.add(jButton16);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
-        add(jPanel3, gridBagConstraints);
+        movementPanel.add(jPanel7, gridBagConstraints);
+
+        tabbedPanel.addTab("Movement", movementPanel);
+
+        actionTabPanel.setLayout(new java.awt.GridLayout(0, 1));
+
+        actionPanel.setBackground(new java.awt.Color(102, 102, 102));
+        actionPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 20, 1, 20));
+        actionPanel.setLayout(new java.awt.GridLayout(0, 1, 0, 5));
+        jScrollPane1.setViewportView(actionPanel);
+
+        actionTabPanel.add(jScrollPane1);
+
+        tabbedPanel.addTab("Actions", actionTabPanel);
+
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.weightx = 0.1;
+        gridBagConstraints.weighty = 0.1;
+        add(tabbedPanel, gridBagConstraints);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.SOUTHEAST));
-        updateShip(currentShip);
-    }//GEN-LAST:event_jButton4ActionPerformed
+    private void upButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_upButton1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_upButton1ActionPerformed
 
-    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
-        MapPanel.getInstance().addCommand(ShipCommands.turnLeft(currentShip));
-        updateShip(currentShip);
-    }//GEN-LAST:event_jButton7ActionPerformed
+    private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton9ActionPerformed
 
-    private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
-        MapPanel.getInstance().addCommand(ShipCommands.turnRight(currentShip));
-        updateShip(currentShip);
-    }//GEN-LAST:event_jButton8ActionPerformed
+    private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton10ActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        MapPanel.getInstance().addCommand(ShipCommands.moveForward(currentShip));
-        updateShip(currentShip);
-    }//GEN-LAST:event_jButton1ActionPerformed
+    private void jButton11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton11ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton11ActionPerformed
 
-    private void upButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_upButtonActionPerformed
-        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.NORTH));
-        updateShip(currentShip);
-    }//GEN-LAST:event_upButtonActionPerformed
+    private void jButton12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton12ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton12ActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-       // currentShip.drift(Direction.NORTHEAST);
-        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.NORTHEAST));
-        updateShip(currentShip);
-    }//GEN-LAST:event_jButton2ActionPerformed
+    private void jButton13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton13ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton13ActionPerformed
 
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-     //  currentShip.drift(Direction.NORTHWEST);
-        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.NORTHWEST));
-        updateShip(currentShip);
-    }//GEN-LAST:event_jButton3ActionPerformed
+    private void jButton14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton14ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton14ActionPerformed
 
-    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-      //  currentShip.drift(Direction.SOUTH);
-        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.SOUTH));
-        updateShip(currentShip);
-    }//GEN-LAST:event_jButton5ActionPerformed
+    private void jButton15ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton15ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton15ActionPerformed
 
-    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-       // currentShip.drift(Direction.SOUTHWEST);
-        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.SOUTHWEST));
-        updateShip(currentShip);
-    }//GEN-LAST:event_jButton6ActionPerformed
+    private void jButton16ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton16ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton16ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
-    private javax.swing.JButton jButton5;
-    private javax.swing.JButton jButton6;
-    private javax.swing.JButton jButton7;
-    private javax.swing.JButton jButton8;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
-    private javax.swing.JLabel jLabel7;
-    private javax.swing.JLabel jLabel8;
-    private javax.swing.JLabel jLabel9;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel actionPanel;
+    private javax.swing.JPanel actionTabPanel;
+    private javax.swing.JButton jButton10;
+    private javax.swing.JButton jButton11;
+    private javax.swing.JButton jButton12;
+    private javax.swing.JButton jButton13;
+    private javax.swing.JButton jButton14;
+    private javax.swing.JButton jButton15;
+    private javax.swing.JButton jButton16;
+    private javax.swing.JButton jButton9;
+    private javax.swing.JLabel jLabel10;
+    private javax.swing.JLabel jLabel11;
+    private javax.swing.JLabel jLabel12;
+    private javax.swing.JLabel jLabel13;
+    private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel16;
+    private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel18;
+    private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JPanel movementPanel;
     private javax.swing.JLabel shipNameField;
     private javax.swing.JLabel speedNLabel;
     private javax.swing.JLabel speedNWLabel;
     private javax.swing.JLabel speedSWLabel;
-    private javax.swing.JButton upButton;
+    private javax.swing.JTabbedPane tabbedPanel;
+    private javax.swing.JButton upButton1;
     // End of variables declaration//GEN-END:variables
 }

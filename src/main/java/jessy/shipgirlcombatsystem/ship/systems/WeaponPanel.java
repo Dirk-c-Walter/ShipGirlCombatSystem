@@ -6,6 +6,24 @@
 package jessy.shipgirlcombatsystem.ship.systems;
 
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.Action;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import jessy.shipgirlcombatsystem.commands.Command;
+import jessy.shipgirlcombatsystem.commands.OverlayAction;
+import jessy.shipgirlcombatsystem.commands.ShipCommands;
+import jessy.shipgirlcombatsystem.map.BoardItem;
+import jessy.shipgirlcombatsystem.map.Hex;
+import jessy.shipgirlcombatsystem.map.HexMap;
+import jessy.shipgirlcombatsystem.screens.MapPanel;
+import jessy.shipgirlcombatsystem.ship.Ship;
 
 /**
  *
@@ -16,12 +34,18 @@ public class WeaponPanel extends javax.swing.JPanel {
     public final static Color damagedBackground = Color.RED;
     public final static Color readyBackground = Color.GREEN;
     public final static Color usedBackground = Color.YELLOW;
+    private final ShipWeaponSystem system;
+    private TableModel weaponProperties;
 
     /**
      * Creates new form WeaponPanel
      */
-    public WeaponPanel() {
+    protected WeaponPanel(ShipWeaponSystem sys) {
+        this.system = sys;
+        weaponProperties = new DefaultTableModel();
         initComponents();
+        doUpdate();
+        
     }
 
     /**
@@ -33,13 +57,15 @@ public class WeaponPanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jLabel1 = new javax.swing.JLabel();
+        arcLabel = new javax.swing.JLabel();
         fireButton = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        propertiesTable = new javax.swing.JTable();
 
         setBorder(javax.swing.BorderFactory.createTitledBorder("Weapon"));
 
-        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/jessy/shipgirlcombatsystem/images/arc/Full.png"))); // NOI18N
+        arcLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        arcLabel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/jessy/shipgirlcombatsystem/images/arc/Full.png"))); // NOI18N
 
         fireButton.setText("Fire");
         fireButton.addActionListener(new java.awt.event.ActionListener() {
@@ -48,25 +74,78 @@ public class WeaponPanel extends javax.swing.JPanel {
             }
         });
 
+        propertiesTable.setModel(weaponProperties);
+        propertiesTable.getTableHeader().setReorderingAllowed(false);
+        jScrollPane1.setViewportView(propertiesTable);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 188, Short.MAX_VALUE)
+                .addComponent(arcLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 355, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(fireButton))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-            .addComponent(jLabel1)
-            .addComponent(fireButton, javax.swing.GroupLayout.PREFERRED_SIZE, 59, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(arcLabel))
+            .addComponent(fireButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
     private void fireButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fireButtonActionPerformed
-        // TODO add your handling code here:
-        this.setBackground(usedBackground);
+        final MapPanel panel = MapPanel.getInstance();
+        final Ship ship = system.getShip();
+        final Hex startingHex = panel.getBoard().getLocation(ship.getEntityId());
+        panel.setMeasureMode(startingHex, new OverlayAction() {
+
+            @Override
+            public JPopupMenu getMenuForHex(Hex targetHex, HexMap current, BoardItem[] list) {
+                JPopupMenu menu = new JPopupMenu();
+                for(BoardItem item : list) {
+                    if(item instanceof Ship) {
+                        final Ship target = (Ship) item;
+                        JMenuItem menuEntry = new JMenuItem("Shoot " + target.getName());
+                        menuEntry.setEnabled(!target.getOwner().getName().equals(ship.getOwner().getName()));
+                        menuEntry.addActionListener(new ActionListener() {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    if(system.isValidTarget(startingHex.getLine(targetHex), target)) {
+                                        panel.addCommand(ShipCommands.fireWeapon(system, startingHex, target, targetHex));
+                                    }
+                                }                            
+                            });
+                        menu.add(menuEntry);
+                    }
+                    
+                    
+                }
+                
+                JMenuItem menuEntry = new JMenuItem("cancel");
+                menu.add(menuEntry);
+                
+                return menu;
+            }
+            
+            @Override
+            public String getTextForHex(int distance) {
+                return "" + system.range.modPower(system.getPower(), distance);
+            }
+
+            @Override
+            public Color getColorFor(List<Hex> line, int distance) {
+                if(system.isValidTarget(line, null)) {
+                    return new Color(distance < 255 ? distance : 255, 0, 255);
+                } else {
+                    return Color.RED;
+                }
+            }
+        });
     }//GEN-LAST:event_fireButtonActionPerformed
 
     public void setDamaged(boolean state) {
@@ -79,7 +158,31 @@ public class WeaponPanel extends javax.swing.JPanel {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel arcLabel;
     private javax.swing.JButton fireButton;
-    private javax.swing.JLabel jLabel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTable propertiesTable;
     // End of variables declaration//GEN-END:variables
+
+    void doUpdate() {
+        String[] cols = {"Type", "Value"};
+        List<String[]> data = new ArrayList<>();
+        data.add(new String[]{"Name", system.getName()});
+        data.add(new String[]{"Range", system.range.toString()});
+        data.add(new String[]{"Power", "" + system.getPower()});
+        data.add(new String[]{"Shield Damage", "" + system.getShieldDmg()});
+        data.add(new String[]{"Shield Pen", "" + system.getShieldPen()});
+        data.add(new String[]{"Hull Damage", "" + system.getHullDmg()});
+        data.add(new String[]{"Ammo", "infinite"});
+        data.add(new String[]{"Heat", "" + system.getHeat()});
+        data.add(new String[]{"Arc", system.arc.toString()});
+        weaponProperties = new DefaultTableModel(data.toArray(new String[0][0]), cols);
+        arcLabel.setIcon(system.arc.getIcon());
+        switch(system.state) {
+            case DAMAGED: this.setBackground(damagedBackground); break;
+            case READY: this.setBackground(readyBackground); break;
+            case USED: this.setBackground(usedBackground); break;
+            default : this.setBackground(normalBackground);
+        }
+    }
 }

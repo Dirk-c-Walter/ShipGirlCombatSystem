@@ -8,7 +8,9 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import javax.swing.ImageIcon;
 import jessy.shipgirlcombatsystem.map.BoardItem;
@@ -17,6 +19,8 @@ import jessy.shipgirlcombatsystem.map.Hex;
 import jessy.shipgirlcombatsystem.map.HexMap;
 import jessy.shipgirlcombatsystem.map.Player;
 import jessy.shipgirlcombatsystem.screens.MapPanel;
+import jessy.shipgirlcombatsystem.ship.systems.ShipWeaponSystem;
+import jessy.shipgirlcombatsystem.thrift.ThriftEquipment;
 import jessy.shipgirlcombatsystem.thrift.ThriftShip;
 
 /**
@@ -34,11 +38,39 @@ public class Ship implements BoardItem {
     private ImageIcon image = new javax.swing.ImageIcon(getClass().getResource("/jessy/shipgirlcombatsystem/images/BaseShip.png"));
     private Shield shield = new Shield();
     private Hull hull = new Hull();
+    private int currentHeat =0;
+    private int cooling = 5;
+    private int ecm =0;
+    private int sensorPower = 6;
+    private RangeFactor sensorRange = RangeFactor.DISTANCE;
+    private List<IShipSystem> equipment = new ArrayList<>();
 
     public Ship(String id, Player owner) {
         this.id = id;
         name= "Nautilus " + id;
         this.owner = owner;
+    }
+    
+    public Ship(Ship other) {
+        this(other, other.id);
+    }
+    
+    public Ship(Ship other, String newId) {
+        this.id = newId;
+        name = other.name;
+        this.owner = other.owner;
+        this.speedQ = other.speedQ;
+        this.speedR = other.speedR;
+        this.currentHeat = other.currentHeat;
+        this.cooling = other.cooling;
+        this.ecm = other.ecm;
+        this.facing = other.facing;
+        this.hull = new Hull(other.hull);
+        this.shield = new Shield(other.shield);
+        this.image = other.image;
+        this.sensorPower = other.sensorPower;
+        this.sensorRange = other.sensorRange;
+        this.equipment = new ArrayList<>(other.equipment);        
     }
     
     public Direction getFacing() {
@@ -94,29 +126,32 @@ public class Ship implements BoardItem {
     }
 
     @Override
-    public void notifyRemoved(Hex a) {
-        //update all components
-
-    }
-
-    @Override
-    public void notifyAdded(Hex b) {
-        //update all components
-
-    }
-
-    @Override
     public boolean selectable() {
         return true;
     }
 
     @Override
-    public void notifySelect() {
+    public void notifySelect(HexMap board) {
         //make sure ship panel is updated.
     }
+    
+    @Override
+    public void startMovement(HexMap board) {
+        Hex h = new Hex(speedQ, speedR);
+        board.move(id, board.getLocation(id).add(h));
+        for(IShipSystem system : equipment) {
+            system.startMovement(board);
+        }
+    }
 
-    public void move(Hex oldPos, Hex newPos) {
+    @Override
+    public void startAction(HexMap board) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
+    @Override
+    public void endTurn(HexMap board) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
@@ -132,23 +167,14 @@ public class Ship implements BoardItem {
         g2.rotate(facing.theta);
         final int modSize = (size+overflow);
         final int modHeight = (height+overflow);
-        g2.drawImage(getImage(), -modSize, -modHeight, 2*modSize, 2*modHeight, null);
+        g2.drawImage(image.getImage(), -modSize, -modHeight, 2*modSize, 2*modHeight, null);
         g2.setTransform(oldTransform);
-
-    }
-
-    private Image getImage() {
-        return image.getImage();
-    }
-
-    @Override
-    public void doNewtonian() {
 
     }
 
     @Override
     public BoardItem clone() {
-        return new Ship(id, owner);
+        return new Ship(this);
     }
 
     @Override
@@ -159,6 +185,83 @@ public class Ship implements BoardItem {
     @Override
     public Player getOwner() {
         return owner;
+    }
+
+    public ImageIcon getImage() {
+        return image;
+    }
+
+    public void setImage(ImageIcon image) {
+        this.image = image;
+    }
+
+    public Shield getShield() {
+        return shield;
+    }
+
+    public void setShield(Shield shield) {
+        this.shield = shield;
+    }
+
+    public Hull getHull() {
+        return hull;
+    }
+
+    public void setHull(Hull hull) {
+        this.hull = hull;
+    }
+
+    public int getCurrentHeat() {
+        return currentHeat;
+    }
+
+    public void setCurrentHeat(int currentHeat) {
+        this.currentHeat = currentHeat;
+    }
+
+    public int getCooling() {
+        return cooling;
+    }
+
+    public void setCooling(int cooling) {
+        this.cooling = cooling;
+    }
+
+    public int getEcm() {
+        return ecm;
+    }
+
+    public void setEcm(int ecm) {
+        this.ecm = ecm;
+    }
+
+    public int getSensorPower() {
+        return sensorPower;
+    }
+
+    public void setSensorPower(int sensorPower) {
+        this.sensorPower = sensorPower;
+    }
+
+    public RangeFactor getSensorRange() {
+        return sensorRange;
+    }
+
+    public void setSensorRange(RangeFactor sensorRange) {
+        this.sensorRange = sensorRange;
+    }
+
+    public List<IShipSystem> getEquipment() {
+        return equipment;
+    }
+
+    public void setEquipment(List<IShipSystem> equipment) {
+        this.equipment = equipment;
+    }
+    
+    public void addEquipment(IShipSystem equipment) {
+        this.equipment.add(equipment);
+        equipment.addToShip(this);
     }
 
     @Override
@@ -177,6 +280,10 @@ public class Ship implements BoardItem {
         
         thrift.setProperties(properties);
         
+        for(IShipSystem item : equipment) {
+            thrift.addToEquipment(item.thrift());
+        }
+        
         return thrift;
     }
 
@@ -188,6 +295,15 @@ public class Ship implements BoardItem {
             speedR = Integer.parseInt(props.get("SpeedR"));
             speedQ = Integer.parseInt(props.get("SpeedQ"));
         }
+        
+        if(item.getEquipment() != null) {
+            for(ThriftEquipment system : item.equipment) {
+                switch(system.type) {
+                    case "ShipWeaponSystem": equipment.add(new ShipWeaponSystem(system, this)); break;
+                    default: throw new IllegalArgumentException("Unknown Ship system");
+                }
+            }
+        }
     }
 
     private static class Shield {
@@ -198,11 +314,38 @@ public class Ship implements BoardItem {
 
         public Shield() {
         }
+        
+        public Shield(int max, int regen, int current) {
+            this.maxShield = max;
+            this.shieldRegen = regen;
+            this.currentShield = current;
+        }
+
+        private Shield(Shield shield) {
+            this(shield.maxShield, shield.shieldRegen, shield.currentShield);
+        }
     }
 
     private static class Hull {
+        int armor = 0;
+        int damage = 12;
+        int systemDamage = 24;
+        int destroyed = 36;
+        int currentDamage  = 0;
 
         public Hull() {
+        }
+        
+        public Hull(int armor, int damage, int systemDamage, int destroyed, int currentDamage) {
+            this.armor = armor;
+            this.damage = damage;
+            this.systemDamage = systemDamage;
+            this.destroyed = destroyed;
+            this.currentDamage = currentDamage;
+        }
+
+        private Hull(Hull hull) {
+            this(hull.armor, hull.damage, hull.systemDamage, hull.destroyed, hull.currentDamage);
         }
     }
     

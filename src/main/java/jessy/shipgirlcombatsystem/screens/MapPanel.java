@@ -30,6 +30,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import jessy.shipgirlcombatsystem.commands.Command;
+import jessy.shipgirlcombatsystem.commands.OverlayAction;
 import jessy.shipgirlcombatsystem.map.BoardItem;
 import jessy.shipgirlcombatsystem.map.Hex;
 import jessy.shipgirlcombatsystem.map.HexMap;
@@ -59,6 +60,7 @@ public class MapPanel extends javax.swing.JPanel {
     private LinkedHashMap<Hex, Overlay> overlay = new LinkedHashMap<>();
     private Player player;
     private Client client;
+    private final MapMouseListener ml;
 
     /**
      * Creates new form MapPanel
@@ -70,7 +72,7 @@ public class MapPanel extends javax.swing.JPanel {
         translation.y = r * height * 2 + 50;
         initComponents();
         
-        DebugMouseListener ml = new DebugMouseListener();            
+        ml = new MapMouseListener();            
         addMouseListener(ml);
         addMouseWheelListener(ml);
         addMouseMotionListener(ml);
@@ -267,13 +269,28 @@ public class MapPanel extends javax.swing.JPanel {
     public Client getClient() {
         return client;
     }
+    
+    public void setMeasureMode(Hex starting, OverlayAction action) {
+        SwingUtilities.invokeLater(new Runnable() {
 
-    private class DebugMouseListener extends MouseAdapter {
+            @Override
+            public void run() {
+                ml.measureMode = true;
+                ml.measureStart = starting;
+                ml.action = action;
+                repaint();
+            }
+            
+        });
+    }
+
+    private class MapMouseListener extends MouseAdapter {
         private boolean measureMode = false;
         private Hex measureStart = null;
         private int lastItemIndex;
         private Hex lastHex;
         private Point clickSource = null;
+        private OverlayAction action = null;
                 
         @Override
         public void mousePressed(MouseEvent e) {
@@ -299,7 +316,7 @@ public class MapPanel extends javax.swing.JPanel {
                 final Hex a = Hex.pixelToHex(new Point(x,y), side*2);
                 List<Hex> line = measureStart.getLine(a);
                 for(int i =0; i < line.size(); i++) {
-                    overlay.put(line.get(i), new Overlay(""+i));
+                    overlay.put(line.get(i), new Overlay(i, action, line));
                 }
                 repaint();
             }
@@ -339,6 +356,11 @@ public class MapPanel extends javax.swing.JPanel {
             System.out.println("Hit: (" + x+ "," +y+ "): " + e.getButton() + " - " + Hex.pixelToHex(new Point(x,y), side*2));
             if(measureMode) {
                 measureMode = false;
+                if(action != null) {
+                    JPopupMenu menu = action.getMenuForHex(a, current, list);
+                    menu.show(instance, e.getX(), e.getY());
+                    return;
+                }
             }
             if(e.getButton() == MouseEvent.BUTTON1) {
                 if(!a.equals(lastHex)) {
@@ -397,13 +419,22 @@ public class MapPanel extends javax.swing.JPanel {
     
     private static class Overlay {
         private final String text;
+        private final OverlayAction action;
+        private final Color color;
 
-        public Overlay(String text) {
-            this.text = text;
+        private Overlay(int distance, OverlayAction action, List<Hex> line) {
+            this.action = action;
+            if(action == null) {
+                this.text = "" + distance;
+                this.color = Color.BLUE;
+            } else {
+                this.text = action.getTextForHex(distance);
+                this.color = action.getColorFor(line, distance);
+            }
         }
         
         public Color getHexColor() {
-            return Color.BLUE;
+            return color;
         }
     }
 }
