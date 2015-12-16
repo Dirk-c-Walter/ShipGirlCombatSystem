@@ -260,23 +260,23 @@ public class ShipPanel extends javax.swing.JPanel {
 
     private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
         // TODO add your handling code here:
-        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.NORTHWEST));
+        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.NORTHEAST));
         updateShip(currentShip);
     }//GEN-LAST:event_jButton9ActionPerformed
 
     private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
-        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.NORTHEAST));
+        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.NORTHWEST));
         updateShip(currentShip);
     }//GEN-LAST:event_jButton10ActionPerformed
 
     private void jButton11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton11ActionPerformed
         // TODO add your handling code here:
-        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.SOUTHWEST));
+        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.SOUTHEAST));
         updateShip(currentShip);
     }//GEN-LAST:event_jButton11ActionPerformed
 
     private void jButton12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton12ActionPerformed
-        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.SOUTHEAST));
+        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.SOUTHWEST));
         updateShip(currentShip);
     }//GEN-LAST:event_jButton12ActionPerformed
 
