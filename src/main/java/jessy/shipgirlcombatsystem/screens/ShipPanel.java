@@ -254,38 +254,52 @@ public class ShipPanel extends javax.swing.JPanel {
 
     private void upButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_upButton1ActionPerformed
         // TODO add your handling code here:
+        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.NORTH));
+        updateShip(currentShip);
     }//GEN-LAST:event_upButton1ActionPerformed
 
     private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton9ActionPerformed
         // TODO add your handling code here:
+        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.NORTHWEST));
+        updateShip(currentShip);
     }//GEN-LAST:event_jButton9ActionPerformed
 
     private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
-        // TODO add your handling code here:
+        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.NORTHEAST));
+        updateShip(currentShip);
     }//GEN-LAST:event_jButton10ActionPerformed
 
     private void jButton11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton11ActionPerformed
         // TODO add your handling code here:
+        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.SOUTHWEST));
+        updateShip(currentShip);
     }//GEN-LAST:event_jButton11ActionPerformed
 
     private void jButton12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton12ActionPerformed
-        // TODO add your handling code here:
+        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.SOUTHEAST));
+        updateShip(currentShip);
     }//GEN-LAST:event_jButton12ActionPerformed
 
     private void jButton13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton13ActionPerformed
         // TODO add your handling code here:
+        MapPanel.getInstance().addCommand(ShipCommands.drift(currentShip, Direction.SOUTH));
+        updateShip(currentShip);
     }//GEN-LAST:event_jButton13ActionPerformed
 
     private void jButton14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton14ActionPerformed
-        // TODO add your handling code here:
+        MapPanel.getInstance().addCommand(ShipCommands.moveForward(currentShip));
+        updateShip(currentShip);
     }//GEN-LAST:event_jButton14ActionPerformed
 
     private void jButton15ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton15ActionPerformed
         // TODO add your handling code here:
+        MapPanel.getInstance().addCommand(ShipCommands.turnLeft(currentShip));
+        updateShip(currentShip);
     }//GEN-LAST:event_jButton15ActionPerformed
 
     private void jButton16ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton16ActionPerformed
-        // TODO add your handling code here:
+        MapPanel.getInstance().addCommand(ShipCommands.turnRight(currentShip));
+        updateShip(currentShip);
     }//GEN-LAST:event_jButton16ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
