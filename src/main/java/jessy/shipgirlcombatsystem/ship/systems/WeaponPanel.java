@@ -105,12 +105,12 @@ public class WeaponPanel extends javax.swing.JPanel {
         panel.setMeasureMode(startingHex, new OverlayAction() {
 
             @Override
-            public JPopupMenu getMenuForHex(Hex targetHex, HexMap current, BoardItem[] list) {
-                JPopupMenu menu = new JPopupMenu();
+            public JPopupMenu getMenuForHex(final Hex targetHex, final HexMap current, final BoardItem[] list) {
+                final JPopupMenu menu = new JPopupMenu();
                 for(BoardItem item : list) {
                     if(item instanceof Ship) {
                         final Ship target = (Ship) item;
-                        JMenuItem menuEntry = new JMenuItem("Shoot " + target.getName());
+                        final JMenuItem menuEntry = new JMenuItem("Shoot " + target.getName());
                         menuEntry.setEnabled(!target.getOwner().getName().equals(ship.getOwner().getName()));
                         menuEntry.addActionListener(new ActionListener() {
                                 @Override
@@ -140,7 +140,17 @@ public class WeaponPanel extends javax.swing.JPanel {
             @Override
             public Color getColorFor(List<Hex> line, int distance) {
                 if(system.isValidTarget(line, null)) {
-                    return new Color(distance*5 < 255 ? distance*5 : 255, 0, 255);
+                    final int mod = system.range.modPower(system.getPower(), distance);
+                    if(mod < -10) {
+                        return new Color(255, 0, 0);
+                    } else if(mod < 0) {
+                        return new Color(255, 0, 255+(mod*10));
+                    } else if (system.getPower() > 0) {
+                        int color = Math.max(0, Math.min(255 - ((255 * mod) / system.getPower()), 255));
+                        return new Color(color, 0, 255);
+                    } else {
+                        return new Color(0, 0, 255);
+                    }
                 } else {
                     return Color.RED;
                 }
