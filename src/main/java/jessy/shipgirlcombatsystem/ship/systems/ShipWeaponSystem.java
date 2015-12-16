@@ -26,7 +26,7 @@ public class ShipWeaponSystem implements IShipSystem {
     private Ship ship;
     protected State state = State.READY;
     public RangeFactor range = RangeFactor.DISTANCE;
-    public FireingArcs arc = FireingArcs.FULL;
+    public FireingArcs arc = FireingArcs.FORWARD3;
     private int heat = 2;
     private int shieldDmg = 4;
     private int shieldPen = 5;

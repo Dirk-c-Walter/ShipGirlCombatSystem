@@ -140,7 +140,7 @@ public class WeaponPanel extends javax.swing.JPanel {
             @Override
             public Color getColorFor(List<Hex> line, int distance) {
                 if(system.isValidTarget(line, null)) {
-                    return new Color(distance < 255 ? distance : 255, 0, 255);
+                    return new Color(distance*5 < 255 ? distance*5 : 255, 0, 255);
                 } else {
                     return Color.RED;
                 }

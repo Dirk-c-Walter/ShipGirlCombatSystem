@@ -272,9 +272,9 @@ public class MapPanel extends javax.swing.JPanel {
     
     public void setMeasureMode(Hex starting, OverlayAction action) {
         SwingUtilities.invokeLater(new Runnable() {
-
             @Override
             public void run() {
+                System.out.println("I am starting at; " + starting);
                 ml.measureMode = true;
                 ml.measureStart = starting;
                 ml.action = action;
@@ -359,6 +359,7 @@ public class MapPanel extends javax.swing.JPanel {
                 if(action != null) {
                     JPopupMenu menu = action.getMenuForHex(a, current, list);
                     menu.show(instance, e.getX(), e.getY());
+                    action = null;
                     return;
                 }
             }
