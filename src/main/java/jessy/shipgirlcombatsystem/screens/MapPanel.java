@@ -270,7 +270,7 @@ public class MapPanel extends javax.swing.JPanel {
         return client;
     }
     
-    public void setMeasureMode(Hex starting, OverlayAction action) {
+    public void setMeasureMode(final Hex starting, final OverlayAction action) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {

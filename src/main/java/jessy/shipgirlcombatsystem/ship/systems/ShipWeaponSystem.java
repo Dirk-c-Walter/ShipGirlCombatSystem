@@ -16,7 +16,7 @@ import jessy.shipgirlcombatsystem.thrift.ThriftEquipment;
  * @author dirk
  */
 public class ShipWeaponSystem implements IShipSystem {    
-    private enum State {
+    public enum State {
         READY,
         DAMAGED,
         USED,
