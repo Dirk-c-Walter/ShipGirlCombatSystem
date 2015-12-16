@@ -184,5 +184,7 @@ public class WeaponPanel extends javax.swing.JPanel {
             case USED: this.setBackground(usedBackground); break;
             default : this.setBackground(normalBackground);
         }
+        
+        propertiesTable.setModel(weaponProperties);
     }
 }
