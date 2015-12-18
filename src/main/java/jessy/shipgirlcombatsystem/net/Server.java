@@ -49,7 +49,7 @@ import org.apache.thrift.transport.TTransportException;
 public class Server {
     private TThreadPoolServer server;
     private ServerSocket socket;
-    private HexMap gameState = new HexMap(15);
+    private HexMap gameState = new HexMap(20);
     private Phase currentPhase = Phase.INIT_PHASE;
     private final GameProcessor processor = new GameProcessor();
     private int turn = 0;
@@ -67,10 +67,14 @@ public class Server {
         Ship redShip = new Ship(gameState.getNewUniqueID(), new Player("A", Color.pink));
         redShip.addEquipment(new ShipWeaponSystem("Big Gun", redShip));
         redShip.addEquipment(new ShipWeaponSystem("Small Gun", redShip));
-        gameState.add(redShip, new Hex(2,2));
-        gameState.add(new Ship(gameState.getNewUniqueID(), new Player("B", new Color(50,255,50))), new Hex(2,-2));
-        gameState.add(new Ship(gameState.getNewUniqueID(), new Player("C", Color.YELLOW)), new Hex(-2,2));
-        gameState.add(new Ship(gameState.getNewUniqueID(), new Player("D",  new Color(50,50,255))), new Hex(-2,-2));
+        gameState.add(redShip, new Hex(4,4));
+        Ship blueShip = new Ship(gameState.getNewUniqueID(), new Player("D",  new Color(50,50,255)));
+        blueShip.addEquipment(new ShipWeaponSystem("Big Gun", blueShip));
+        blueShip.addEquipment(new ShipWeaponSystem("Small Gun", blueShip));
+        gameState.add(blueShip, new Hex(-4,-4));
+        
+        //gameState.add(new Ship(gameState.getNewUniqueID(), new Player("B", new Color(50,255,50))), new Hex(2,-2));
+        //gameState.add(new Ship(gameState.getNewUniqueID(), new Player("C", Color.YELLOW)), new Hex(-2,2));
         
         panel.applyNewTurn(gameState, currentPhase);
         
