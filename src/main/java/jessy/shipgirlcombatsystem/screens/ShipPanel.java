@@ -45,6 +45,7 @@ public class ShipPanel extends javax.swing.JPanel {
                 for(IShipSystem item : ship.getEquipment()) {
                     actionPanel.add(item.getSystemPanel());
                 }
+                damageLabel.setText(ship.getStatusString());
                 requestFocus();
             }
         });
@@ -90,6 +91,7 @@ public class ShipPanel extends javax.swing.JPanel {
         actionTabPanel = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         actionPanel = new javax.swing.JPanel();
+        damageLabel = new javax.swing.JLabel();
 
         setLayout(new java.awt.GridBagLayout());
 
@@ -101,7 +103,6 @@ public class ShipPanel extends javax.swing.JPanel {
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
-        gridBagConstraints.gridheight = 2;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         gridBagConstraints.insets = new java.awt.Insets(10, 10, 10, 10);
         add(shipNameField, gridBagConstraints);
@@ -246,10 +247,19 @@ public class ShipPanel extends javax.swing.JPanel {
         tabbedPanel.addTab("Actions", actionTabPanel);
 
         gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridwidth = java.awt.GridBagConstraints.REMAINDER;
+        gridBagConstraints.gridheight = 3;
         gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
         gridBagConstraints.weightx = 0.1;
         gridBagConstraints.weighty = 0.1;
         add(tabbedPanel, gridBagConstraints);
+
+        damageLabel.setForeground(new java.awt.Color(153, 0, 0));
+        damageLabel.setText("0");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        add(damageLabel, gridBagConstraints);
     }// </editor-fold>//GEN-END:initComponents
 
     private void upButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_upButton1ActionPerformed
@@ -305,6 +315,7 @@ public class ShipPanel extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel actionPanel;
     private javax.swing.JPanel actionTabPanel;
+    private javax.swing.JLabel damageLabel;
     private javax.swing.JButton jButton10;
     private javax.swing.JButton jButton11;
     private javax.swing.JButton jButton12;

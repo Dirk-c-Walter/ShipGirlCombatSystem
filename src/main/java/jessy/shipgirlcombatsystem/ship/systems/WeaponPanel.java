@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.Action;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
@@ -24,6 +25,7 @@ import jessy.shipgirlcombatsystem.map.Hex;
 import jessy.shipgirlcombatsystem.map.HexMap;
 import jessy.shipgirlcombatsystem.screens.MapPanel;
 import jessy.shipgirlcombatsystem.ship.Ship;
+import jessy.shipgirlcombatsystem.util.Phase;
 
 /**
  *
@@ -100,6 +102,10 @@ public class WeaponPanel extends javax.swing.JPanel {
 
     private void fireButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fireButtonActionPerformed
         final MapPanel panel = MapPanel.getInstance();
+        if(panel.getBoard().getPhase() != Phase.ACTION_PHASE) {
+            JOptionPane.showConfirmDialog(this, "Not in the action phase.");
+            return;
+        }
         final Ship ship = system.getShip();
         final Hex startingHex = panel.getBoard().getLocation(ship.getEntityId());
         panel.setMeasureMode(startingHex, new OverlayAction() {
@@ -158,15 +164,6 @@ public class WeaponPanel extends javax.swing.JPanel {
         });
     }//GEN-LAST:event_fireButtonActionPerformed
 
-    public void setDamaged(boolean state) {
-        fireButton.setEnabled(!state);
-        if(state) {
-            this.setBackground(damagedBackground);
-        } else {
-            this.setBackground(normalBackground);
-        }
-    }
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel arcLabel;
     private javax.swing.JButton fireButton;
@@ -188,9 +185,10 @@ public class WeaponPanel extends javax.swing.JPanel {
         data.add(new String[]{"Arc", system.arc.toString()});
         weaponProperties = new DefaultTableModel(data.toArray(new String[0][0]), cols);
         arcLabel.setIcon(system.arc.getIcon());
+        fireButton.setEnabled(false);
         switch(system.state) {
             case DAMAGED: this.setBackground(damagedBackground); break;
-            case READY: this.setBackground(readyBackground); break;
+            case READY: this.setBackground(readyBackground); fireButton.setEnabled(true); break;
             case USED: this.setBackground(usedBackground); break;
             default : this.setBackground(normalBackground);
         }

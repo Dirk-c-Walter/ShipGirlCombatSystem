@@ -16,6 +16,11 @@ import jessy.shipgirlcombatsystem.thrift.ThriftEquipment;
  * @author dirk
  */
 public class ShipWeaponSystem implements IShipSystem {    
+
+    public int getWeaponPower(Hex startingHex, Hex targetHex) {
+        return range.modPower(power, startingHex.getDistance(targetHex));
+    }
+    
     public enum State {
         READY,
         DAMAGED,
@@ -184,6 +189,15 @@ public class ShipWeaponSystem implements IShipSystem {
         } else {
             return arc.allowableFirstHex(ship.getFacing(), line.get(0)).contains(line.get(1));
         }
+    }
+    
+    public void setUsed(boolean b) {
+        if(b) {
+            state = State.USED;
+        } else {
+            state = State.READY;
+        }
+        panel.doUpdate();
     }
     
     public ShipWeaponSystem(ThriftEquipment thrift, Ship ship) {

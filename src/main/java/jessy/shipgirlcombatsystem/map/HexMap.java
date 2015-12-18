@@ -5,13 +5,16 @@
 package jessy.shipgirlcombatsystem.map;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import jessy.shipgirlcombatsystem.commands.ServerCommand;
 import jessy.shipgirlcombatsystem.screens.MapPanel;
 import jessy.shipgirlcombatsystem.ship.Ship;
 import jessy.shipgirlcombatsystem.thrift.ThriftGameState;
@@ -34,6 +37,7 @@ public class HexMap {
     
     private Player player = null;
     private Phase phase = INIT_PHASE;
+    private List<ServerCommand> serverCommands = new ArrayList<>();
     
     public HexMap(int size) {
         radious = size;
@@ -172,13 +176,25 @@ public class HexMap {
         return Color.BLACK;
     }
 
+    //Server Only!
     public void advancePhase() {
         if(phase == MOVEMENT_PHASE) {
             phase = ACTION_PHASE;
         } else {
+            for(ServerCommand cmd : serverCommands) {
+                cmd.endActionPhase(this);
+            }
             phase = MOVEMENT_PHASE;
+            for(BoardItem ship : itemList.values() ) {
+                ship.startMovement(this);
+            }
         }
-               
+        
+        serverCommands.clear();
+    }
+
+    public void addServerCommand(ServerCommand serverCommand) {
+        serverCommands.add(serverCommand);
     }
 
   

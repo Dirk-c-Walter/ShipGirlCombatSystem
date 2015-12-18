@@ -4,9 +4,12 @@
  */
 package jessy.shipgirlcombatsystem.commands;
 
+import java.util.HashMap;
+import java.util.Map;
 import jessy.shipgirlcombatsystem.map.Direction;
 import jessy.shipgirlcombatsystem.map.HexMap;
 import jessy.shipgirlcombatsystem.map.Hex;
+import jessy.shipgirlcombatsystem.screens.MapPanel;
 import jessy.shipgirlcombatsystem.ship.Ship;
 import jessy.shipgirlcombatsystem.ship.systems.ShipWeaponSystem;
 import jessy.shipgirlcombatsystem.thrift.ThriftCommand;
@@ -51,7 +54,7 @@ public class ShipCommands {
     }
 
     public static Command fireWeapon(ShipWeaponSystem system, Hex startingHex, Ship target, Hex targetHex) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return new FireWeaponCommand(system, startingHex, targetHex, target);
     }
 
     private static class MoveForwardCommand implements Command {
@@ -217,6 +220,77 @@ public class ShipCommands {
                 case NORTHWEST: cmd.setCommandCode(ThriftCommandEnum.DriftNW); break;
             }
             return cmd;
+        }
+    }
+
+    private static class FireWeaponCommand implements Command {
+        final ShipWeaponSystem system; //will be null on server side.
+        final Map<String, String> weaponStats;
+        
+
+        public FireWeaponCommand(ShipWeaponSystem system, Hex startingHex, Hex targetHex, Ship target) {
+            final String sourceEntityId = system.getShip().getEntityId();
+            final String targetEntityId = target.getEntityId();
+            this.system = system;
+            weaponStats = new HashMap<String, String>();
+            weaponStats.put("targetEntityId", targetEntityId);
+            weaponStats.put("sourceEntityId", sourceEntityId);
+            weaponStats.put("Heat", "" + system.getHeat());
+            weaponStats.put("Shield Damage", "" + system.getShieldDmg());
+            weaponStats.put("Shield Penetration", "" + system.getShieldPen());
+            weaponStats.put("WeaponPower", "" + system.getWeaponPower(startingHex, targetHex));
+            weaponStats.put("Hull Damage", "" + system.getHullDmg());
+            weaponStats.put("WeaponName", system.getName());
+        }
+
+        @Override
+        public boolean appliesToPhase(Phase p) {
+            return p == Phase.ACTION_PHASE;
+        }
+
+        @Override
+        public void applyCommand(HexMap board) {
+            if(system != null) {
+                system.setUsed(true);
+            } else {
+                board.addServerCommand(new ServerCommand() {
+                    @Override
+                    public void endActionPhase(HexMap board) {
+                        final Ship source = (Ship) board.getEntity(weaponStats.get("sourceEntityId"));
+                        final Ship target = (Ship) board.getEntity(weaponStats.get("targetEntityId"));
+                        
+                        int modPower = Integer.parseInt(weaponStats.get("WeaponPower")); //TODO: mod with random and sensor power in future
+                        target.applyHit(modPower, Integer.parseInt(weaponStats.get("Shield Damage")),
+                                Integer.parseInt(weaponStats.get("Shield Penetration")),
+                                Integer.parseInt(weaponStats.get("Hull Damage")));
+                    }
+                    
+                });
+            }
+            
+        }
+
+        @Override
+        public void undoCommand(HexMap board) {
+            if(system != null) {
+                system.setUsed(false);
+            }
+        }
+        
+        public FireWeaponCommand(ThriftCommand cmd) {
+            assert(cmd.type.equals("FireShipWeapon"));
+            weaponStats = cmd.properties;
+            system = null;
+            
+        }
+
+        @Override
+        public ThriftCommand thrift() {
+            ThriftCommand thrift = new ThriftCommand();
+            thrift.setType("FireShipWeapon");
+            thrift.properties = this.weaponStats;
+            thrift.sourceId = weaponStats.get("sourceEntityId");
+            return thrift;
         }
     }
 }

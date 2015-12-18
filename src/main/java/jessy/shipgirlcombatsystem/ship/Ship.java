@@ -9,9 +9,11 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import javax.swing.ImageIcon;
 import jessy.shipgirlcombatsystem.map.BoardItem;
 import jessy.shipgirlcombatsystem.map.Direction;
@@ -42,6 +44,7 @@ public class Ship implements BoardItem {
     private int cooling = 5;
     private int ecm =0;
     private int sensorPower = 6;
+    private boolean destroyed = false;
     private RangeFactor sensorRange = RangeFactor.DISTANCE;
     private List<IShipSystem> equipment = new ArrayList<>();
 
@@ -70,6 +73,7 @@ public class Ship implements BoardItem {
         this.image = other.image;
         this.sensorPower = other.sensorPower;
         this.sensorRange = other.sensorRange;
+        this.destroyed = other.destroyed;
         this.equipment = new ArrayList<>(other.equipment);        
     }
     
@@ -127,7 +131,7 @@ public class Ship implements BoardItem {
 
     @Override
     public boolean selectable() {
-        return true;
+        return !destroyed;
     }
 
     @Override
@@ -146,12 +150,14 @@ public class Ship implements BoardItem {
 
     @Override
     public void startAction(HexMap board) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        for(IShipSystem system : equipment) {
+            system.startAction(board);
+        }
     }
 
     @Override
     public void endTurn(HexMap board) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //do nothing? heat and cooling maybe...
     }
 
     @Override
@@ -161,6 +167,9 @@ public class Ship implements BoardItem {
 
     @Override
     public void drawItem(Graphics2D g2, Hex position, int size, int height) {
+        if(destroyed) {
+            return;
+        }
         AffineTransform oldTransform = g2.getTransform();
         Point center = position.toPixel(2*size);
         g2.translate(center.x, center.y);
@@ -263,6 +272,17 @@ public class Ship implements BoardItem {
         this.equipment.add(equipment);
         equipment.addToShip(this);
     }
+    
+    public List<IShipSystem> getWorkingEquipment(){
+        List<IShipSystem> lst = new ArrayList(equipment.size());
+        for(IShipSystem item : equipment) {
+            if(!item.isDamaged()) {
+                lst.add(item);
+            }
+        }
+        
+        return lst;
+    }
 
     @Override
     public ThriftShip thrift() {
@@ -277,6 +297,9 @@ public class Ship implements BoardItem {
         properties.put("Name", name);
         properties.put("SpeedR", ""+speedR);
         properties.put("SpeedQ", ""+speedQ);
+        properties.put("Destroyed", ""+destroyed);
+        properties.putAll(hull.thrift());
+        properties.putAll(shield.thrift());
         
         thrift.setProperties(properties);
         
@@ -294,6 +317,9 @@ public class Ship implements BoardItem {
             name = props.get("Name");
             speedR = Integer.parseInt(props.get("SpeedR"));
             speedQ = Integer.parseInt(props.get("SpeedQ"));
+            destroyed = Boolean.parseBoolean(props.get("Destroyed"));
+            hull = new Hull(props);
+            shield = new Shield(props);
         }
         
         if(item.getEquipment() != null) {
@@ -306,7 +332,17 @@ public class Ship implements BoardItem {
         }
     }
 
-    private static class Shield {
+    public void applyHit(int modPower, int shieldDmg, int shieldPen, int hullDmg) {
+        if(modPower <= 0) {
+            return;
+        }
+        
+        final int postShield = shield.applyHit(modPower, shieldDmg, shieldPen);
+        
+        hull.applyHit(postShield, hullDmg);
+    }
+
+    public static class Shield {
         int maxShield = 10;
         int shieldRegen = 2;
         int currentShield = maxShield;
@@ -324,28 +360,97 @@ public class Ship implements BoardItem {
         private Shield(Shield shield) {
             this(shield.maxShield, shield.shieldRegen, shield.currentShield);
         }
+
+        private Shield(Map<String, String> map) {
+            currentShield = Integer.parseInt(map.get("shield.Current"));
+            maxShield = Integer.parseInt(map.get("shield.Max"));
+            shieldRegen = Integer.parseInt(map.get("shield.Regen"));
+        }
+
+        private int applyHit(int power, int shieldDmg, int shieldPen) {
+            this.currentShield = Math.max(this.currentShield - shieldDmg, 0);
+            return power - Math.max(currentShield - shieldPen, 0);
+        }
+
+        private Map<String, String> thrift() {
+            Map<String, String> map = new LinkedHashMap<String, String>();
+            map.put("shield.Current", ""+currentShield);
+            map.put("shield.Max", ""+maxShield);
+            map.put("shield.Regen", ""+shieldRegen);
+            
+            return map;
+        }
+    }
+    
+    public String getStatusString() {
+        if(destroyed) {
+            return "X.X";
+        }
+        
+        return shield.currentShield + "S/" + hull.currentDamage;
     }
 
-    private static class Hull {
+    public class Hull {
         int armor = 0;
         int damage = 12;
-        int systemDamage = 24;
         int destroyed = 36;
         int currentDamage  = 0;
 
         public Hull() {
         }
         
-        public Hull(int armor, int damage, int systemDamage, int destroyed, int currentDamage) {
+        public Hull(int armor, int damage, int destroyed, int currentDamage) {
             this.armor = armor;
             this.damage = damage;
-            this.systemDamage = systemDamage;
             this.destroyed = destroyed;
             this.currentDamage = currentDamage;
         }
 
         private Hull(Hull hull) {
-            this(hull.armor, hull.damage, hull.systemDamage, hull.destroyed, hull.currentDamage);
+            this(hull.armor, hull.damage, hull.destroyed, hull.currentDamage);
+        }
+
+        private Hull(Map<String, String> map) {
+            currentDamage = Integer.parseInt(map.get("hull.currentDamage"));
+            damage = Integer.parseInt(map.get("hull.Damage"));
+            armor = Integer.parseInt(map.get("hull.Armor"));
+            destroyed = Integer.parseInt(map.get("hull.Destroyed"));
+        }
+
+        private void applyHit(int power, int hullDmg) {
+            if(power <= armor) {
+                return;
+            }
+            power += currentDamage;
+            if(power <= damage) {
+                currentDamage += hullDmg;
+            } else if(power <= destroyed) {
+                currentDamage += hullDmg + 1;
+                //TODO: damage system
+                List<IShipSystem> working = getWorkingEquipment();
+                if(working.isEmpty()) {
+                    currentDamage += 5;
+                } else if(working.size() == 1) {
+                    working.get(0).setDamaged();
+                } else {
+                    Random rand = new Random();
+                    int systemHit = rand.nextInt(working.size());
+                    
+                    working.get(systemHit).setDamaged();
+                }
+            } else {
+                Ship.this.destroyed = true;
+            }
+        }
+
+        private Map<String, String> thrift() {
+            Map<String, String> map = new LinkedHashMap<String, String>();
+            map.put("hull.currentDamage", ""+currentDamage);
+            map.put("hull.Damage", ""+damage);
+            map.put("hull.Destroyed", ""+destroyed);
+            map.put("hull.Armor", ""+armor);
+            
+            return map;
         }
     }
     
