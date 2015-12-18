@@ -108,10 +108,17 @@ public class Server {
     private void applyCommands() {
         turn++;
         for(ThriftCommand cmd : turnActions) {
-            if("Enum".equals(cmd.type)) {
-                Command c = ShipCommands.fromEnum(cmd.commandCode, cmd);
-                c.applyCommand(gameState);
-            }
+            final Command c;
+            switch(cmd.type) {
+                case "Enum" :
+                    c = ShipCommands.fromEnum(cmd.commandCode, cmd);
+                    c.applyCommand(gameState);
+                    break;
+                case "FireShipWeapon": 
+                    c = new ShipCommands.FireWeaponCommand(cmd);
+                    c.applyCommand(gameState);
+                    break;
+            } 
         }
         gameState.advancePhase();
         currentPhase = gameState.getPhase();

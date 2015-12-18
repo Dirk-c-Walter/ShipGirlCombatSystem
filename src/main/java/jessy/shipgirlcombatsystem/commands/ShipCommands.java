@@ -223,7 +223,7 @@ public class ShipCommands {
         }
     }
 
-    private static class FireWeaponCommand implements Command {
+    public static class FireWeaponCommand implements Command {
         final ShipWeaponSystem system; //will be null on server side.
         final Map<String, String> weaponStats;
         
