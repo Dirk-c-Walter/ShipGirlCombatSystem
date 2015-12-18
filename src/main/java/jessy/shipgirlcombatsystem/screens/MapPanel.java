@@ -197,6 +197,8 @@ public class MapPanel extends javax.swing.JPanel {
         final LinkedList<Command> cmd = commands;
         final HexMap cur = current;
         current.setPhase(Phase.WAIT_PHASE);
+        ml.action = null;
+        ml.measureMode = false;
         ThriftUtil.invokeLater(new Runnable() {
             @Override
             public void run() {
