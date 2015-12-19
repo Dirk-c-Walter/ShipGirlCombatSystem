@@ -22,6 +22,7 @@ import jessy.shipgirlcombatsystem.thrift.ShipGirlCombatSystemServer;
 import jessy.shipgirlcombatsystem.thrift.ThriftCommandList;
 import jessy.shipgirlcombatsystem.thrift.ThriftGameState;
 import jessy.shipgirlcombatsystem.thrift.ThriftPacketType;
+import jessy.shipgirlcombatsystem.thrift.ThriftWelcome;
 import jessy.shipgirlcombatsystem.util.Phase;
 import org.apache.thrift.TException;
 import org.apache.thrift.transport.TSocket;
@@ -44,9 +45,9 @@ public class Client {
         client = new ShipGirlCombatSystemServer.Client(tprot);
     }
     
-    public String join(Player newPlayer) throws TException {
+    public ThriftWelcome join(Player newPlayer) throws TException {
         me = newPlayer;
-        return client.joinPlayer(newPlayer.thrift()).getMotd();
+        return client.joinPlayer(newPlayer.thrift());
     }
     
     public HexMap doneTurn(List<Command> cmds, HexMap current, Phase phase) throws TException {
@@ -66,6 +67,13 @@ public class Client {
         }
 
         ThriftGameState newState = client.donePhase(packet);
+        if(newState.isSetMessages() && !newState.messages.isEmpty()) {
+            System.out.println("=== Turn Result ===");
+            for(String str : newState.messages) {
+                System.out.println(str);
+            }
+            System.out.println("=== End Turn Result ===");
+        }
         return new HexMap(newState);
     }
 }

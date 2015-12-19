@@ -20,6 +20,7 @@ import jessy.shipgirlcombatsystem.map.Direction;
 import jessy.shipgirlcombatsystem.map.Hex;
 import jessy.shipgirlcombatsystem.map.HexMap;
 import jessy.shipgirlcombatsystem.map.Player;
+import jessy.shipgirlcombatsystem.net.Server;
 import jessy.shipgirlcombatsystem.screens.MapPanel;
 import jessy.shipgirlcombatsystem.ship.systems.ShipWeaponSystem;
 import jessy.shipgirlcombatsystem.thrift.ThriftEquipment;
@@ -47,6 +48,7 @@ public class Ship implements BoardItem {
     private boolean destroyed = false;
     private RangeFactor sensorRange = RangeFactor.DISTANCE;
     private List<IShipSystem> equipment = new ArrayList<>();
+    private String imgName = "BaseShip";
 
     public Ship(String id, Player owner) {
         this.id = id;
@@ -200,8 +202,9 @@ public class Ship implements BoardItem {
         return image;
     }
 
-    public void setImage(ImageIcon image) {
-        this.image = image;
+    public void setImage(String iconName) {
+        this.imgName = iconName;
+        image = new javax.swing.ImageIcon(getClass().getResource("/jessy/shipgirlcombatsystem/images/" + imgName + ".png"));
     }
 
     public Shield getShield() {
@@ -288,7 +291,7 @@ public class Ship implements BoardItem {
     public ThriftShip thrift() {
         ThriftShip thrift = new ThriftShip();
         thrift.setId(id);
-        thrift.setOwner(owner.thrift());
+        thrift.owner = this.owner.thrift();
         thrift.setType("Ship");
         thrift.setPosition(MapPanel.getInstance().getBoard().getLocation(id).thrift());
         
@@ -298,6 +301,13 @@ public class Ship implements BoardItem {
         properties.put("SpeedR", ""+speedR);
         properties.put("SpeedQ", ""+speedQ);
         properties.put("Destroyed", ""+destroyed);
+        properties.put("Icon Name", imgName);
+        properties.put("Cooling", ""+cooling);
+        properties.put("Current Heat", ""+currentHeat);
+        properties.put("ECM", ""+ecm);
+        properties.put("Sensors", ""+sensorPower);
+        properties.put("Sensor Range", sensorRange.name());
+        
         properties.putAll(hull.thrift());
         properties.putAll(shield.thrift());
         
@@ -318,6 +328,14 @@ public class Ship implements BoardItem {
             speedR = Integer.parseInt(props.get("SpeedR"));
             speedQ = Integer.parseInt(props.get("SpeedQ"));
             destroyed = Boolean.parseBoolean(props.get("Destroyed"));
+            cooling = Integer.parseInt(props.get("Cooling"));
+            currentHeat = Integer.parseInt(props.get("Current Heat"));
+            ecm = Integer.parseInt(props.get("ECM"));
+            sensorPower = Integer.parseInt(props.get("Sensors"));
+            sensorRange = RangeFactor.valueOf(props.get("Sensor Range"));
+            
+            this.setImage(props.get("Icon Name"));
+
             hull = new Hull(props);
             shield = new Shield(props);
         }
@@ -332,14 +350,22 @@ public class Ship implements BoardItem {
         }
     }
 
-    public void applyHit(int modPower, int shieldDmg, int shieldPen, int hullDmg) {
+    public String applyHit(int modPower, int shieldDmg, int shieldPen, int hullDmg) {
         if(modPower <= 0) {
-            return;
+            return "The shot missed with power " + modPower + ".";
         }
         
         final int postShield = shield.applyHit(modPower, shieldDmg, shieldPen);
         
-        hull.applyHit(postShield, hullDmg);
+        String str = "The shot hit, with power " + modPower + ". ";
+        if(postShield > 0) {
+            str += "Punching through the shields (" + shield.currentShield + "/" + shield.maxShield + ") with remaining power " + postShield + " ";
+            str += hull.applyHit(postShield, hullDmg);
+        } else {
+            str += "However it failed to penetrate the shields (" + shield.currentShield + "/" + shield.maxShield + ") of " + this.id + ".";
+        }
+        
+        return str;
     }
 
     public static class Shield {
@@ -417,30 +443,38 @@ public class Ship implements BoardItem {
             destroyed = Integer.parseInt(map.get("hull.Destroyed"));
         }
 
-        private void applyHit(int power, int hullDmg) {
+        private String applyHit(int power, int hullDmg) {
             if(power <= armor) {
-                return;
+                return "but bouncing off the armor.";
             }
+            String str = "";
             power += currentDamage;
             if(power <= damage) {
                 currentDamage += hullDmg;
+                str = "and doing light damage brining the damage up to " + currentDamage + ".";
             } else if(power <= destroyed) {
                 currentDamage += hullDmg + 1;
-                //TODO: damage system
                 List<IShipSystem> working = getWorkingEquipment();
                 if(working.isEmpty()) {
                     currentDamage += 5;
+                    str = "and doing massive damage to the near wreck brining the damage up to " + currentDamage + ".";
                 } else if(working.size() == 1) {
-                    working.get(0).setDamaged();
+                    IShipSystem sys = working.get(0);
+                    sys.setDamaged();
+                    str += " destroying the last functional system " + sys.getName() + ".";
                 } else {
-                    Random rand = new Random();
-                    int systemHit = rand.nextInt(working.size());
+                    int systemHit = Server.getRandomInt(working.size());
                     
-                    working.get(systemHit).setDamaged();
+                    IShipSystem sys = working.get(systemHit);
+                    sys.setDamaged();
+                    
+                    str = "and doing significant damage brining the damage up to " + currentDamage + " and destroying system " + sys.getName() + ".";
                 }
             } else {
+                str = "destroying the ship outright.";
                 Ship.this.destroyed = true;
             }
+            return str;
         }
 
         private Map<String, String> thrift() {

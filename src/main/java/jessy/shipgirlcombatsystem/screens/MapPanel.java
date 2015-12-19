@@ -37,6 +37,7 @@ import jessy.shipgirlcombatsystem.map.HexMap;
 import jessy.shipgirlcombatsystem.map.Player;
 import jessy.shipgirlcombatsystem.net.Client;
 import jessy.shipgirlcombatsystem.ship.Ship;
+import jessy.shipgirlcombatsystem.thrift.ThriftWelcome;
 import jessy.shipgirlcombatsystem.util.MathUtil;
 import jessy.shipgirlcombatsystem.util.Phase;
 import static jessy.shipgirlcombatsystem.util.Phase.WAIT_PHASE;
@@ -191,7 +192,7 @@ public class MapPanel extends javax.swing.JPanel {
     public void sendCommands() {
         assert(client != null);
         if(current.getPhase() == WAIT_PHASE) {
-            JOptionPane.showConfirmDialog(this, "Please wait for the other players.");
+            //JOptionPane.showConfirmDialog(this, "Please wait for the other players.");
             return;
         }
         final LinkedList<Command> cmd = commands;
@@ -199,6 +200,7 @@ public class MapPanel extends javax.swing.JPanel {
         current.setPhase(Phase.WAIT_PHASE);
         ml.action = null;
         ml.measureMode = false;
+        overlay.clear();
         ThriftUtil.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -258,7 +260,14 @@ public class MapPanel extends javax.swing.JPanel {
         assert(player != null && client == null);
         try {
             client = new Client(hostname);
-            return client.join(player);
+            ThriftWelcome welcome =  client.join(player);
+            
+            if(welcome.isSetState()) {
+                HexMap state = new HexMap(welcome.state);
+                applyNewTurn(state, state.getPhase());
+            }
+            
+            return welcome.getMotd();
         } catch (TTransportException ex) {
             Logger.getLogger(MapPanel.class.getName()).log(Level.SEVERE, null, ex);
         } catch (TException ex) {
@@ -276,7 +285,7 @@ public class MapPanel extends javax.swing.JPanel {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                System.out.println("I am starting at; " + starting);
+                //System.out.println("I am starting at; " + starting);
                 ml.measureMode = true;
                 ml.measureStart = starting;
                 ml.action = action;
@@ -355,7 +364,7 @@ public class MapPanel extends javax.swing.JPanel {
             int y = e.getY() - translation.y;
             final Hex a = Hex.pixelToHex(new Point(x,y), side*2);
             BoardItem[] list = current.getEntitiesAt(a).toArray(new BoardItem[0]);
-            System.out.println("Hit: (" + x+ "," +y+ "): " + e.getButton() + " - " + Hex.pixelToHex(new Point(x,y), side*2));
+            //System.out.println("Hit: (" + x+ "," +y+ "): " + e.getButton() + " - " + Hex.pixelToHex(new Point(x,y), side*2));
             if(measureMode) {
                 measureMode = false;
                 if(action != null) {

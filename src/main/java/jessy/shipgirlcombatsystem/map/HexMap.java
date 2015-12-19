@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +39,7 @@ public class HexMap {
     private Player player = null;
     private Phase phase = INIT_PHASE;
     private List<ServerCommand> serverCommands = new ArrayList<>();
+    private List<String> log = new LinkedList<>();
     
     public HexMap(int size) {
         radious = size;
@@ -178,6 +180,7 @@ public class HexMap {
 
     //Server Only!
     public void advancePhase() {
+        log.clear();
         if(phase == MOVEMENT_PHASE) {
             phase = ACTION_PHASE;
         } else {
@@ -195,6 +198,14 @@ public class HexMap {
 
     public void addServerCommand(ServerCommand serverCommand) {
         serverCommands.add(serverCommand);
+    }
+
+    public void logCommand(String cmd) {
+        log.add(cmd);
+    }
+    
+    public List<String> getCommandLog() {
+        return log;
     }
 
   

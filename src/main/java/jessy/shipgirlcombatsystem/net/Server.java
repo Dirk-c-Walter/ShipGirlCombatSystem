@@ -9,12 +9,14 @@ import java.awt.Color;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -55,11 +57,23 @@ public class Server {
     private int turn = 0;
     private List<ThriftCommand> turnActions = Collections.synchronizedList(new LinkedList<ThriftCommand>());
     private final MapPanel panel;
+    private static final Random rand = new Random();
     
     public static void main(String[] args) throws IOException, TTransportException {
         Server server1 = new Server(3300);
     }
     
+    public static int getRandomInt(int bound) {
+        return rand.nextInt(bound);
+    }
+    
+    public static int getRandomMod() {
+        float mod = (float) (rand.nextGaussian() * 5.0);
+        mod = Math.min(mod, 10);
+        mod = Math.max(mod, -10);
+        return Math.round(mod);
+    }
+   
     public Server(int port) throws IOException, TTransportException {
         this.socket = new ServerSocket(port);
         panel = new MapPanel();
@@ -93,34 +107,51 @@ public class Server {
         }
     }
     
-    public ThriftGameState packageGameState() {
+    public synchronized ThriftGameState packageGameState() {
         applyCommands();
         ThriftGameState state = new ThriftGameState();
         state.setMapRadious(gameState.getRadious());
         state.setTurn(turn);
         state.setItems(ThriftUtil.makeThrift(gameState));
+        state.messages = gameState.getCommandLog();
         
         currentPhase = gameState.getPhase();
+        state.setPhaseCode(currentPhase.ordinal());
+        return state;
+    }
+    
+    public synchronized ThriftGameState packageCurrentGameState() {
+        ThriftGameState state = new ThriftGameState();
+        state.setMapRadious(gameState.getRadious());
+        state.setTurn(turn);
+        state.setItems(ThriftUtil.makeThrift(gameState));
+        
         state.setPhaseCode(currentPhase.ordinal());
         return state;
     }
 
     private void applyCommands() {
         turn++;
+        final List<Command> output = new ArrayList<Command>();
         for(ThriftCommand cmd : turnActions) {
             final Command c;
             switch(cmd.type) {
                 case "Enum" :
                     c = ShipCommands.fromEnum(cmd.commandCode, cmd);
-                    c.applyCommand(gameState);
                     break;
                 case "FireShipWeapon": 
                     c = new ShipCommands.FireWeaponCommand(cmd);
-                    c.applyCommand(gameState);
                     break;
+                default: c = null;
             } 
+            c.applyCommand(gameState);
+            System.out.println("Doing: " + c.toString());
+            output.add(c);
         }
         gameState.advancePhase();
+        for(Command out : output){
+            gameState.logCommand(out.toString());
+        }
         currentPhase = gameState.getPhase();
         System.out.println("Advancing to turn: " + turn + " and phase: " + currentPhase);
         try {
@@ -142,7 +173,9 @@ public class Server {
         public ThriftWelcome joinPlayer(ThriftPlayer player) throws ShipGirlServiceError, TException {
             System.out.println("Player " + player.name + " joined.");
             if(playerList.containsKey(player.name)) {
-                return new ThriftWelcome("Welcome back.");
+                final ThriftWelcome ret = new ThriftWelcome("Welcome back.");
+                ret.setState(packageCurrentGameState());
+                return ret;
             }
             
             playerList.put(player.name, new Player(player));

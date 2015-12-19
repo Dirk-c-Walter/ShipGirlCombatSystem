@@ -9,6 +9,7 @@ import java.util.Map;
 import jessy.shipgirlcombatsystem.map.Direction;
 import jessy.shipgirlcombatsystem.map.HexMap;
 import jessy.shipgirlcombatsystem.map.Hex;
+import jessy.shipgirlcombatsystem.net.Server;
 import jessy.shipgirlcombatsystem.screens.MapPanel;
 import jessy.shipgirlcombatsystem.ship.Ship;
 import jessy.shipgirlcombatsystem.ship.systems.ShipWeaponSystem;
@@ -95,6 +96,13 @@ public class ShipCommands {
             cmd.setCommandCode(ThriftCommandEnum.Advance);
             return cmd;
         }
+
+        @Override
+        public String toString() {
+            return "Move forward Issued to " + entityId + '.';
+        }
+        
+        
     }
 
     private static class TurnLeftCommand implements Command {
@@ -132,6 +140,11 @@ public class ShipCommands {
             cmd.setType("Enum");
             cmd.setCommandCode(ThriftCommandEnum.TurnLeft);
             return cmd;
+        }
+        
+        @Override
+        public String toString() {
+            return "Turn Left Issued to " + entityId + '.';
         }
     }
     
@@ -221,11 +234,17 @@ public class ShipCommands {
             }
             return cmd;
         }
+        
+        @Override
+        public String toString() {
+            return "Drift " + dir.toString() + " Issued to " + entityId + '.';
+        }
     }
 
     public static class FireWeaponCommand implements Command {
         final ShipWeaponSystem system; //will be null on server side.
         final Map<String, String> weaponStats;
+        private String result;
         
 
         public FireWeaponCommand(ShipWeaponSystem system, Hex startingHex, Hex targetHex, Ship target) {
@@ -240,7 +259,7 @@ public class ShipCommands {
             weaponStats.put("Shield Penetration", "" + system.getShieldPen());
             weaponStats.put("WeaponPower", "" + system.getWeaponPower(startingHex, targetHex));
             weaponStats.put("Hull Damage", "" + system.getHullDmg());
-            weaponStats.put("WeaponName", system.getName());
+            weaponStats.put("Weapon Name", system.getName());
         }
 
         @Override
@@ -259,15 +278,27 @@ public class ShipCommands {
                         final Ship source = (Ship) board.getEntity(weaponStats.get("sourceEntityId"));
                         final Ship target = (Ship) board.getEntity(weaponStats.get("targetEntityId"));
                         
-                        int modPower = Integer.parseInt(weaponStats.get("WeaponPower")); //TODO: mod with random and sensor power in future
-                        target.applyHit(modPower, Integer.parseInt(weaponStats.get("Shield Damage")),
+                        int modPower = Integer.parseInt(weaponStats.get("WeaponPower")) + Server.getRandomMod(); //TODO: mod with sensor power in future
+                        setResult(target.applyHit(modPower, Integer.parseInt(weaponStats.get("Shield Damage")),
                                 Integer.parseInt(weaponStats.get("Shield Penetration")),
-                                Integer.parseInt(weaponStats.get("Hull Damage")));
+                                Integer.parseInt(weaponStats.get("Hull Damage"))));
                     }
                     
                 });
             }
             
+        }
+        
+        @Override
+        public String toString() {
+            String str = "Ship " + weaponStats.get("sourceEntityId") + " fired on " + weaponStats.get("targetEntityId") + " with weapon " + weaponStats.get("Weapon Name") + ".\n";
+            str += "The result is; " + result;
+            return str;
+        }
+        
+        public void setResult(String result) {
+            System.out.println("Setting result; " + result);
+            this.result = result;
         }
 
         @Override
@@ -281,7 +312,6 @@ public class ShipCommands {
             assert(cmd.type.equals("FireShipWeapon"));
             weaponStats = cmd.properties;
             system = null;
-            
         }
 
         @Override

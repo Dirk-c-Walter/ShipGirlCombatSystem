@@ -15,10 +15,6 @@ struct ThriftPlayer {
     2: ThriftColor color;
 }
 
-struct ThriftWelcome {
-    1: string motd;
-}
-
 struct ThriftHex {
     1: i32 q;
     2: i32 r;
@@ -32,7 +28,7 @@ struct ThriftEquipment {
 struct ThriftShip {
     1: string id;
     2: optional ThriftPlayer owner;
-    3: string type;
+    3: optional string type;
     4: optional map<string, string> properties;
     5: optional list<ThriftEquipment> equipment;
     6: ThriftHex position;
@@ -42,13 +38,20 @@ struct ThriftGameState {
     1: i32 mapRadious;
     2: i32 turn;
     3: i32 phaseCode;
-    4: list<ThriftShip> items;
+    4: optional list<ThriftShip> items;
+    5: optional list<string> messages;
+}
+
+struct ThriftWelcome {
+    1: string motd;
+    2: optional ThriftGameState state;
 }
 
 enum ThriftPacketType {
     DoneLobby;
     DoneMove;
     DoneFire;
+    Reconnect;
 }
 
 enum ThriftCommandEnum {
@@ -74,7 +77,7 @@ struct ThriftCommand {
 struct ThriftCommandList {
     1: ThriftPacketType type;
     2: optional ThriftPlayer player;
-    3: list<ThriftCommand> commands;
+    3: optional list<ThriftCommand> commands;
 }
 
 service ShipGirlCombatSystemServer {

@@ -14,7 +14,8 @@ import org.apache.thrift.TEnum;
 public enum ThriftPacketType implements org.apache.thrift.TEnum {
   DoneLobby(0),
   DoneMove(1),
-  DoneFire(2);
+  DoneFire(2),
+  Reconnect(3);
 
   private final int value;
 
@@ -41,6 +42,8 @@ public enum ThriftPacketType implements org.apache.thrift.TEnum {
         return DoneMove;
       case 2:
         return DoneFire;
+      case 3:
+        return Reconnect;
       default:
         return null;
     }
