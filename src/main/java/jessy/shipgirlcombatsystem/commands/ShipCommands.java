@@ -184,6 +184,11 @@ public class ShipCommands {
             cmd.setCommandCode(ThriftCommandEnum.TurnRight);
             return cmd;
         }
+        
+        @Override
+        public String toString() {
+            return "Turn Right Issued to " + entityId + '.';
+        }
     }
 
     private static class DriftCommand implements Command {

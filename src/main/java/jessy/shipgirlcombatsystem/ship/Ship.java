@@ -152,6 +152,7 @@ public class Ship implements BoardItem {
 
     @Override
     public void startAction(HexMap board) {
+        shield.doRegen();
         for(IShipSystem system : equipment) {
             system.startAction(board);
         }
@@ -406,6 +407,10 @@ public class Ship implements BoardItem {
             
             return map;
         }
+
+        private void doRegen() {
+            currentShield = Math.min(currentShield + shieldRegen, maxShield);
+        }
     }
     
     public String getStatusString() {
@@ -417,9 +422,9 @@ public class Ship implements BoardItem {
     }
 
     public class Hull {
-        int armor = 0;
-        int damage = 12;
-        int destroyed = 36;
+        int armor = 2;
+        int damage = 15;
+        int destroyed = 26;
         int currentDamage  = 0;
 
         public Hull() {

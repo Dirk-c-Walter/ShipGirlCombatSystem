@@ -183,6 +183,9 @@ public class HexMap {
         log.clear();
         if(phase == MOVEMENT_PHASE) {
             phase = ACTION_PHASE;
+            for(BoardItem ship : itemList.values() ) {
+                ship.startAction(this);
+            }
         } else {
             for(ServerCommand cmd : serverCommands) {
                 cmd.endActionPhase(this);
