@@ -32,6 +32,7 @@ struct ThriftShip {
     4: optional map<string, string> properties;
     5: optional list<ThriftEquipment> equipment;
     6: ThriftHex position;
+    7: optional map<string, i32> sensorResult;
 }
 
 struct ThriftGameState {

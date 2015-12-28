@@ -8,11 +8,13 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import jessy.shipgirlcombatsystem.commands.ServerCommand;
@@ -40,6 +42,7 @@ public class HexMap {
     private Phase phase = INIT_PHASE;
     private List<ServerCommand> serverCommands = new ArrayList<>();
     private List<String> log = new LinkedList<>();
+    private int MAX_ECM_RANGE = 3;
     
     public HexMap(int size) {
         radious = size;
@@ -183,6 +186,49 @@ public class HexMap {
         log.clear();
         if(phase == MOVEMENT_PHASE) {
             phase = ACTION_PHASE;
+            for(BoardItem ship : itemList.values() ) {
+                ship.startAction(this);
+                if(ship instanceof Ship) {
+                    final Hex target = getLocation(ship.getEntityId());
+                    final Player targetOwner = ship.getOwner();
+                    final Map<Player, Integer> sensorResult = new LinkedHashMap<>();
+                    for(BoardItem gunner : itemList.values() ) {
+                        if(gunner instanceof Ship) {
+                            final Ship temp = (Ship) gunner;
+                            final Hex source = getLocation(gunner.getEntityId());
+                            final Player sourceOwner = gunner.getOwner();
+                            if(!Objects.equals(sourceOwner, targetOwner)) {
+                                final List<Hex> path = source.getLine(target);
+                                int sensor = temp.getSensor(path.size()-1) - ((Ship) ship).getCurrentECM();
+                                final int pathLength = path.size() -1;
+                                final Map<BoardItem, Integer> tempEcm = new LinkedHashMap<>();
+                                for(int i = 1; i < pathLength; i++) {
+                                    int checkSize = Math.min(Math.min(MAX_ECM_RANGE, i), pathLength-i);
+                                    for(BoardItem b : getEntitiesAt(path.get(i))) {
+                                        getEcmFor(tempEcm, b, 0);
+                                    }
+                                    for(int r =1 ; r <= checkSize; r++) {
+                                        Set<Hex> hexen = path.get(i).getRing(r);
+                                        for(BoardItem b : getAllEntitiesAtLocations(hexen)) {
+                                            getEcmFor(tempEcm, b, r);
+                                        }
+                                    }
+
+                                }
+                                
+                                for(Integer ecm : tempEcm.values()) {
+                                    if(ecm > 0) {
+                                        sensor -= ecm;
+                                    }
+                                }
+
+                                sensorResult.put(sourceOwner, Math.max(sensor, sensorResult.getOrDefault(sourceOwner, Integer.MIN_VALUE)));
+                            }
+                        }
+                    }
+                    ((Ship) ship).setSensorResults(sensorResult);
+                }
+            }
         } else {
             for(ServerCommand cmd : serverCommands) {
                 cmd.endActionPhase(this);
@@ -206,6 +252,23 @@ public class HexMap {
     
     public List<String> getCommandLog() {
         return log;
+    }
+
+    public Set<BoardItem> getAllEntitiesAtLocations(Collection<Hex> hexen) {
+        Set<BoardItem> result = new LinkedHashSet<>();
+        for(Hex hex : hexen) {
+            result.addAll(this.getEntitiesAt(hex));
+        }
+        
+        return result;
+    }
+
+    private static void getEcmFor(Map<BoardItem, Integer> tempEcm, BoardItem ship, int radious) {
+        if(ship instanceof Ship) {
+            tempEcm.put(ship, Math.max(tempEcm.getOrDefault(ship, 0), ((Ship) ship).getEcm(radious)));
+        } else if (radious == 0) {
+            tempEcm.put(ship, 10000);
+        }
     }
 
   

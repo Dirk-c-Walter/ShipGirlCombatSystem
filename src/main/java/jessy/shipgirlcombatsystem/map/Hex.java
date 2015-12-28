@@ -7,7 +7,9 @@ package jessy.shipgirlcombatsystem.map;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import jessy.shipgirlcombatsystem.thrift.ThriftHex;
 import jessy.shipgirlcombatsystem.util.MathUtil;
 
@@ -130,6 +132,19 @@ public class Hex implements Cloneable {
             cx += dx; cy += dy; cz += dz;
         }
         return retVal;
+    }
+    
+    public Set<Hex> getRing(int radious) {
+        Set<Hex> result = new LinkedHashSet<>();
+        Hex curHex = this.move(Direction.SOUTHWEST, radious);
+
+        for(Direction dir : Direction.values()) {
+            for(int j =0; j< radious; j++) {
+                result.add(curHex);
+                curHex = curHex.move(dir);
+            }
+        }
+        return result;
     }
     
     public Point toPixel(int hexSize) {

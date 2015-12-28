@@ -49,6 +49,7 @@ public class Ship implements BoardItem {
     private RangeFactor sensorRange = RangeFactor.DISTANCE;
     private List<IShipSystem> equipment = new ArrayList<>();
     private String imgName = "BaseShip";
+    private Map<Player, Integer> sensorResult;
 
     public Ship(String id, Player owner) {
         this.id = id;
@@ -338,6 +339,7 @@ public class Ship implements BoardItem {
 
             hull = new Hull(props);
             shield = new Shield(props);
+            
         }
         
         if(item.getEquipment() != null) {
@@ -366,6 +368,23 @@ public class Ship implements BoardItem {
         }
         
         return str;
+    }
+
+    public int getSensor(int distance) {
+        return sensorRange.modPower(this.sensorPower, distance);
+    }
+
+    public int getCurrentECM() {
+        //todo, subtract heat.
+        return ecm;
+    }
+
+    public int getEcm(int distance) {
+        return Math.max(ecm -distance, 0);
+    }
+
+    public void setSensorResults(Map<Player, Integer> sensorResult) {
+        this.sensorResult = sensorResult;
     }
 
     public static class Shield {
