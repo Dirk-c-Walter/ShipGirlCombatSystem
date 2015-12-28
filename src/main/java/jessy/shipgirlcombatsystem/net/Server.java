@@ -23,6 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jessy.shipgirlcombatsystem.commands.Command;
 import jessy.shipgirlcombatsystem.commands.ShipCommands;
+import jessy.shipgirlcombatsystem.map.Direction;
 import jessy.shipgirlcombatsystem.map.Hex;
 import jessy.shipgirlcombatsystem.map.HexMap;
 import jessy.shipgirlcombatsystem.map.Player;
@@ -85,6 +86,7 @@ public class Server {
         Ship blueShip = new Ship(gameState.getNewUniqueID(), new Player("D",  new Color(50,50,255)));
         blueShip.addEquipment(new ShipWeaponSystem("Big Gun", blueShip));
         blueShip.addEquipment(new ShipWeaponSystem("Small Gun", blueShip));
+        blueShip.setFacing(Direction.SOUTH);
         gameState.add(blueShip, new Hex(-4,-4));
         
         //gameState.add(new Ship(gameState.getNewUniqueID(), new Player("B", new Color(50,255,50))), new Hex(2,-2));

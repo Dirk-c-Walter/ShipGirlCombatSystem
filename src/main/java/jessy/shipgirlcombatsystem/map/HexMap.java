@@ -228,6 +228,7 @@ public class HexMap {
                     }
                     ((Ship) ship).setSensorResults(sensorResult);
                 }
+
             }
         } else {
             for(ServerCommand cmd : serverCommands) {
