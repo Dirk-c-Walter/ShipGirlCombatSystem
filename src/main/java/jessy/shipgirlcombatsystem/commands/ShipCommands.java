@@ -284,7 +284,8 @@ public class ShipCommands {
                         final Ship target = (Ship) board.getEntity(weaponStats.get("targetEntityId"));
                         
                         int modPower = Integer.parseInt(weaponStats.get("WeaponPower")) + Server.getRandomMod(); //TODO: mod with sensor power in future
-                        setResult(target.applyHit(modPower, Integer.parseInt(weaponStats.get("Shield Damage")),
+                        int modSensor = target.getSensorResults(source.getOwner()) + Server.getRandomMod();
+                        setResult(target.applyHit(modPower, modSensor, Integer.parseInt(weaponStats.get("Shield Damage")),
                                 Integer.parseInt(weaponStats.get("Shield Penetration")),
                                 Integer.parseInt(weaponStats.get("Hull Damage"))));
                     }

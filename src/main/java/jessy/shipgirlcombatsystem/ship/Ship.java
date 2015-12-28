@@ -4,6 +4,7 @@
  */
 package jessy.shipgirlcombatsystem.ship;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
@@ -319,6 +320,10 @@ public class Ship implements BoardItem {
             thrift.addToEquipment(item.thrift());
         }
         
+        for(Map.Entry<Player, Integer> sr: this.sensorResult.entrySet()) {
+            thrift.putToSensorResult(sr.getKey().getName(), sr.getValue());
+        }
+        
         return thrift;
     }
 
@@ -351,16 +356,24 @@ public class Ship implements BoardItem {
                 }
             }
         }
+        
+        if(item.isSetSensorResult()) {
+            this.sensorResult = new LinkedHashMap<>();
+            for(Map.Entry<String, Integer> sr : item.sensorResult.entrySet()) {
+                this.sensorResult.put(Player.getPlayer(sr.getKey(), null), sr.getValue());
+            }
+        }
     }
 
-    public String applyHit(int modPower, int shieldDmg, int shieldPen, int hullDmg) {
-        if(modPower <= 0) {
-            return "The shot missed with power " + modPower + ".";
+    public String applyHit(int modPower, int modSensor, int shieldDmg, int shieldPen, int hullDmg) {
+        int mod = Math.min(modPower, modSensor);
+        if(mod <= 0) {
+            return "The shot missed with power " + mod + " (" + modPower + ", " + modSensor + ").";
         }
         
-        final int postShield = shield.applyHit(modPower, shieldDmg, shieldPen);
+        final int postShield = shield.applyHit(mod, shieldDmg, shieldPen);
         
-        String str = "The shot hit, with power " + modPower + ". ";
+        String str = "The shot hit, with power " + mod + " (" + modPower + ", " + modSensor + "). ";
         if(postShield > 0) {
             str += "Punching through the shields (" + shield.currentShield + "/" + shield.maxShield + ") with remaining power " + postShield + " ";
             str += hull.applyHit(postShield, hullDmg);
@@ -386,6 +399,10 @@ public class Ship implements BoardItem {
 
     public void setSensorResults(Map<Player, Integer> sensorResult) {
         this.sensorResult = sensorResult;
+    }
+    
+    public Integer getSensorResults(Player p) {
+        return this.sensorResult.get(p);
     }
 
     public static class Shield {

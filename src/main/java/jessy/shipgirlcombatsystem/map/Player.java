@@ -6,6 +6,8 @@
 package jessy.shipgirlcombatsystem.map;
 
 import java.awt.Color;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import jessy.shipgirlcombatsystem.thrift.ThriftPlayer;
 import jessy.shipgirlcombatsystem.util.ThriftUtil;
@@ -19,18 +21,29 @@ public class Player {
     private Color playerColor;
     private String name;
     
+    private static Map<String, Player> players = new HashMap<>();
+    
     public Player() {
+    }
+    
+    public static Player getPlayer(String name, Color col) {
+        if(players.containsKey(name)) {
+            return players.get(name);
+        }
         
+        return new Player(name, col);
     }
     
     public Player(String name, Color col) {
         this.name = name;
         playerColor = col;
+        players.put(name, this);
     }
 
     public Player(ThriftPlayer player) {
         name = player.name;
         playerColor = ThriftUtil.convertThrift(player.color);
+        players.put(name, this);
     }
 
     public Color getPlayerColor() {
