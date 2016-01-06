@@ -365,25 +365,6 @@ public class Ship implements BoardItem {
         }
     }
 
-    public String applyHit(int modPower, int modSensor, int shieldDmg, int shieldPen, int hullDmg) {
-        int mod = Math.min(modPower, modSensor);
-        if(mod <= 0) {
-            return "The shot missed with power " + mod + " (" + modPower + ", " + modSensor + ").";
-        }
-        
-        final int postShield = shield.applyHit(mod, shieldDmg, shieldPen);
-        
-        String str = "The shot hit, with power " + mod + " (" + modPower + ", " + modSensor + "). ";
-        if(postShield > 0) {
-            str += "Punching through the shields (" + shield.currentShield + "/" + shield.maxShield + ") with remaining power " + postShield + " ";
-            str += hull.applyHit(postShield, hullDmg);
-        } else {
-            str += "However it failed to penetrate the shields (" + shield.currentShield + "/" + shield.maxShield + ") of " + this.id + ".";
-        }
-        
-        return str;
-    }
-
     public int getSensor(int distance) {
         return sensorRange.modPower(this.sensorPower, distance);
     }
@@ -428,11 +409,6 @@ public class Ship implements BoardItem {
             currentShield = Integer.parseInt(map.get("shield.Current"));
             maxShield = Integer.parseInt(map.get("shield.Max"));
             shieldRegen = Integer.parseInt(map.get("shield.Regen"));
-        }
-
-        private int applyHit(int power, int shieldDmg, int shieldPen) {
-            this.currentShield = Math.max(this.currentShield - shieldDmg, 0);
-            return power - Math.max(currentShield - shieldPen, 0);
         }
 
         private Map<String, String> thrift() {
